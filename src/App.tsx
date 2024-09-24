@@ -34,14 +34,14 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="system" attribute="class">
-      <div className="min-h-screen bg-background text-foreground">
+      <div className="min-h-screen bg-background text-foreground w-full">
         <Header />
         <main className="container mx-auto p-4">
           <div className="flex flex-col lg:flex-row gap-4">
-            <div className="lg:w-2/3">
+            <div className="lg:w-4/5">
               {videoData && <VideoPlayer video={videoData} />}
             </div>
-            <div className="lg:w-1/3">
+            <div className="lg:w-1/5">
               <Chat messages={chatMessages} />
             </div>
           </div>

@@ -19,8 +19,6 @@ function App() {
     thumbnailUrl: 'https://via.placeholder.com/640x360',
   })
   const [chatMessages] = useState([
-    { id: '1', content: 'Hello!', sender: 'User1' },
-    { id: '2', content: 'Hi there!', sender: 'User2' },
   ])
   const [recommendations] = useState([
     { id: '1', title: 'Recommended Video 1', thumbnailUrl: 'https://via.placeholder.com/320x180' },

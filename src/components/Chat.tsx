@@ -87,7 +87,7 @@ export function Chat({ messages }: ChatProps) {
           placeholder="Type your message here."
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          className="flex-grow"
+          className="flex-grow resize-none"
         />
         <Button 
           onClick={handleSendMessage} 

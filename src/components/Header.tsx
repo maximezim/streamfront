@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button"
+import { Login } from "@/components/Login"
+import { Signup } from "@/components/Signup"
 
 import {
   NavigationMenu,
@@ -8,6 +9,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
+
 
 const Header = () => {
   return (
@@ -23,10 +25,10 @@ const Header = () => {
               <NavigationMenuTrigger>Browse</NavigationMenuTrigger>
               <NavigationMenuContent className="flex flex-col px-7 w-full divide-y">  
                 <NavigationMenuLink className="w-32">
-                  <p className="text-sm leading-tight py-3">Live Streams</p>
+                  <p className="text-sm leading-tight py-3 cursor-pointer">Live Streams</p>
                 </NavigationMenuLink>
                 <NavigationMenuLink className="w-32">
-                  <p className="text-sm leading-tight py-3">Trending</p>
+                  <p className="text-sm leading-tight py-3 cursor-pointer">Trending</p>
                 </NavigationMenuLink>
               </NavigationMenuContent>
             </NavigationMenuItem>
@@ -34,19 +36,19 @@ const Header = () => {
               <NavigationMenuTrigger>Following</NavigationMenuTrigger>
               <NavigationMenuContent className="flex flex-col px-7 w-full divide-y">  
                 <NavigationMenuLink className="w-32">
-                  <p className="text-sm leading-tight py-3">Subscriptions</p>
+                  <p className="text-sm leading-tight py-3 cursor-pointer">Subscriptions</p>
                 </NavigationMenuLink>
                 <NavigationMenuLink className="w-32">
-                  <p className="text-sm leading-tight py-3">Favorites</p>
+                  <p className="text-sm leading-tight py-3 cursor-pointer">Favorites</p>
                 </NavigationMenuLink>
               </NavigationMenuContent>
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
       </div>
-      <div className="ml-auto">
-        <Button variant="outline" className="mr-2">Log In</Button>
-        <Button>Sign Up</Button>
+      <div className="ml-auto flex items-center gap-3">
+        <Login />
+        <Signup />
       </div>
     </header>
   )

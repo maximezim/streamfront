@@ -24,16 +24,18 @@ export function Chat({ messages }: ChatProps) {
   }
 
   return (
-    <div className="flex flex-col h-[600px]">
-      <ScrollArea className="flex-grow rounded-md border p-4">
-        {messages.map((message) => (
-          <React.Fragment key={message.id}>
-            <div className="text-sm">
-              <strong>{message.sender}:</strong> {message.content}
-            </div>
-            <Separator className="my-2" />
-          </React.Fragment>
-        ))}
+    <div className="flex flex-col h-full">
+      <ScrollArea className="flex-grow rounded-md border">
+        <div className="p-4">
+          {messages.map((message) => (
+            <React.Fragment key={message.id}>
+              <div className="text-sm">
+                <strong>{message.sender}:</strong> {message.content}
+              </div>
+              <Separator className="my-2" />
+            </React.Fragment>
+          ))}
+        </div>
       </ScrollArea>
       <div className="mt-4 flex flex-col">
         <Textarea

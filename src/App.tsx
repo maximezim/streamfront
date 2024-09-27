@@ -1,16 +1,31 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { ThemeProvider } from './components/theme-provider'
 import Header from './components/Header'
 import VideoPlayer from './components/VideoPlayer'
 import { Chat } from './components/Chat'
-import { Recommendations } from './components/Recommendations'
+import { RecommendationsDrawer } from './components/RecommendationsDrawer'
 // import { fetchVideoData, fetchChatMessages, fetchRecommendations } from './api/streamingApi'
 // import { subscribeToLiveChat } from './brokers/chatBroker'
 
 function App() {
-  const [videoData, setVideoData] = useState(null)
-  const [chatMessages, setChatMessages] = useState([])
-  const [recommendations, setRecommendations] = useState([])
+  // const [videoData, setVideoData] = useState(null)
+  // const [chatMessages, setChatMessages] = useState([])
+  // const [recommendations, setRecommendations] = useState([])
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const lastScrollY = useRef(0)
+  const [videoData] = useState({
+    id: '1',
+    title: 'Sample Video',
+    thumbnailUrl: 'https://via.placeholder.com/640x360',
+  })
+  const [chatMessages] = useState([
+    { id: '1', content: 'Hello!', sender: 'User1' },
+    { id: '2', content: 'Hi there!', sender: 'User2' },
+  ])
+  const [recommendations] = useState([
+    { id: '1', title: 'Recommended Video 1', thumbnailUrl: 'https://via.placeholder.com/320x180' },
+    { id: '2', title: 'Recommended Video 2', thumbnailUrl: 'https://via.placeholder.com/320x180' },
+  ])
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -32,23 +47,36 @@ function App() {
     loadInitialData()
   }, [])
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+      if (currentScrollY > lastScrollY.current && currentScrollY > 200) {
+        setIsDrawerOpen(true)
+      } else if (currentScrollY < lastScrollY.current) {
+        setIsDrawerOpen(false)
+      }
+      lastScrollY.current = currentScrollY
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   return (
     <ThemeProvider defaultTheme="system" attribute="class">
       <div className="min-h-screen bg-background text-foreground w-full">
         <Header />
         <main className="container mx-auto p-4">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="lg:w-4/5">
+          <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-100px)]">
+            <div className="lg:w-4/5 h-full">
               {videoData && <VideoPlayer video={videoData} />}
             </div>
-            <div className="lg:w-1/5">
+            <div className="lg:w-1/5 h-full">
               <Chat messages={chatMessages} />
             </div>
           </div>
-          <div className="mt-8">
-            <Recommendations items={recommendations} />
-          </div>
         </main>
+        <RecommendationsDrawer items={recommendations} isOpen={isDrawerOpen} />
       </div>
     </ThemeProvider>
   )

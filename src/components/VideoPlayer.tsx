@@ -1,5 +1,4 @@
 import { AspectRatio } from "@/components/ui/aspect-ratio"
-import { Skeleton } from "@/components/ui/skeleton"
 
 interface VideoPlayerProps {
   video: {
@@ -11,16 +10,14 @@ interface VideoPlayerProps {
 
 const VideoPlayer = ({ video }: VideoPlayerProps) => {
   return (
-    <div className="w-full">
-      <AspectRatio ratio={16 / 9}>
-        <div className="w-full h-full bg-gray-200 rounded-md flex items-center justify-center">
-          <Skeleton className="w-full h-full rounded-md" />
-        </div>
+    <div className="w-full h-full">
+      <AspectRatio ratio={16 / 9} className="h-full">
+        <img
+          src={video.thumbnailUrl}
+          alt={video.title}
+          className="w-full h-full object-cover rounded-md"
+        />
       </AspectRatio>
-      <div className="mt-2 space-y-2">
-        <Skeleton className="h-6 w-3/4" />
-        <Skeleton className="h-4 w-1/2" />
-      </div>
     </div>
   )
 }

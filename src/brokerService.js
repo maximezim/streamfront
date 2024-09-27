@@ -1,9 +1,9 @@
+// brokerService.js
 import mqtt from 'mqtt'
-import { v4 as uuidv4 } from 'uuid'  // Import UUID library if needed
+import { v4 as uuidv4 } from 'uuid'  
 
 const BROKER_URL = "remicaulier.fr"
 const BROKER_PORT = 1886 
-const BROKER_STREAMING_CLIENT_ID = "go-streaming-client"
 const BROKER_USERNAME = "viewer"
 const BROKER_PASSWORD = "zimzimlegoat"
 const BROKER_STREAMING_TOPIC = "chat-streaming"
@@ -14,14 +14,16 @@ export function connectToBroker(onMessageReceived) {
   if (!client) {
     // Using MQTT protocol with TCP
     const brokerUrl = `mqtt://${BROKER_URL}:${BROKER_PORT}`
+    const clientId = uuidv4();  // Generate a unique clientId
+
     client = mqtt.connect(brokerUrl, {
-      clientId: BROKER_STREAMING_CLIENT_ID,
+      clientId: clientId,
       username: BROKER_USERNAME,
       password: BROKER_PASSWORD
     });
 
     client.on('connect', () => {
-      console.log('Connected to broker');
+      console.log('Connected to broker with clientId:', clientId);
       client.subscribe(BROKER_STREAMING_TOPIC, (err) => {
         if (err) {
           console.error('Failed to subscribe to topic:', err);

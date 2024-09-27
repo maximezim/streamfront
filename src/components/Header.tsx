@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -20,17 +21,24 @@ const Header = () => {
           <NavigationMenuList>
             <NavigationMenuItem>
               <NavigationMenuTrigger>Browse</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <NavigationMenuLink>Categories</NavigationMenuLink>
-                <NavigationMenuLink>Live Streams</NavigationMenuLink>
-                <NavigationMenuLink>Trending</NavigationMenuLink>
+              <NavigationMenuContent className="flex flex-col px-7 w-full divide-y">  
+                <NavigationMenuLink className="w-32">
+                  <p className="text-sm leading-tight py-3">Live Streams</p>
+                </NavigationMenuLink>
+                <NavigationMenuLink className="w-32">
+                  <p className="text-sm leading-tight py-3">Trending</p>
+                </NavigationMenuLink>
               </NavigationMenuContent>
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuTrigger>Following</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <NavigationMenuLink>Subscriptions</NavigationMenuLink>
-                <NavigationMenuLink>Favorites</NavigationMenuLink>
+              <NavigationMenuContent className="flex flex-col px-7 w-full divide-y">  
+                <NavigationMenuLink className="w-32">
+                  <p className="text-sm leading-tight py-3">Subscriptions</p>
+                </NavigationMenuLink>
+                <NavigationMenuLink className="w-32">
+                  <p className="text-sm leading-tight py-3">Favorites</p>
+                </NavigationMenuLink>
               </NavigationMenuContent>
             </NavigationMenuItem>
           </NavigationMenuList>

@@ -67,11 +67,11 @@ function App() {
       <div className="min-h-screen bg-background text-foreground w-full">
         <Header />
         <main className="container mx-auto p-4">
-          <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-100px)]">
-            <div className="lg:w-4/5 h-full">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="lg:w-4/5 ">
               {videoData && <VideoPlayer video={videoData} />}
             </div>
-            <div className="lg:w-1/5 h-full">
+            <div className="lg:w-1/5 flex flex-col"> 
               <Chat messages={chatMessages} />
             </div>
           </div>

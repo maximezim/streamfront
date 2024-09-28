@@ -3,7 +3,9 @@ import { ThemeProvider } from './components/theme-provider'
 import Header from './components/Header'
 import VideoPlayer from './components/VideoPlayer'
 import { Chat } from './components/Chat'
-import { RecommendationsDrawer } from './components/RecommendationsDrawer'
+import { RecommendationsScroll } from './components/RecommendationsScroll'
+import { Separator } from './components/ui/separator'
+import { channel } from 'diagnostics_channel'
 // import { fetchVideoData, fetchChatMessages, fetchRecommendations } from './api/streamingApi'
 // import { subscribeToLiveChat } from './brokers/chatBroker'
 
@@ -11,8 +13,6 @@ function App() {
   // const [videoData, setVideoData] = useState(null)
   // const [chatMessages, setChatMessages] = useState([])
   // const [recommendations, setRecommendations] = useState([])
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
-  const lastScrollY = useRef(0)
   const [videoData] = useState({
     id: '1',
     title: 'Sample Video',
@@ -21,8 +21,16 @@ function App() {
   const [chatMessages] = useState([
   ])
   const [recommendations] = useState([
-    { id: '1', title: 'Recommended Video 1', thumbnailUrl: 'https://via.placeholder.com/320x180' },
-    { id: '2', title: 'Recommended Video 2', thumbnailUrl: 'https://via.placeholder.com/320x180' },
+    { id: '1', title: 'Recommended Video 1', channel: 'Channel 1', thumbnailUrl: 'https://via.placeholder.com/320x180' },
+    { id: '2', title: 'Recommended Video 2', channel: 'Channel 2', thumbnailUrl: 'https://via.placeholder.com/320x180' },
+    { id: '3', title: 'Recommended Video 3', channel: 'Channel 3', thumbnailUrl: 'https://via.placeholder.com/320x180' },
+    { id: '4', title: 'Recommended Video 4', channel: 'Channel 4', thumbnailUrl: 'https://via.placeholder.com/320x180' },
+    { id: '5', title: 'Recommended Video 5', channel: 'Channel 5', thumbnailUrl: 'https://via.placeholder.com/320x180' },
+    { id: '6', title: 'Recommended Video 6', channel: 'Channel 6', thumbnailUrl: 'https://via.placeholder.com/320x180' },
+    { id: '7', title: 'Recommended Video 7', channel: 'Channel 7', thumbnailUrl: 'https://via.placeholder.com/320x180' },
+    { id: '8', title: 'Recommended Video 8', channel: 'Channel 8', thumbnailUrl: 'https://via.placeholder.com/320x180' },
+    { id: '9', title: 'Recommended Video 9', channel: 'Channel 9', thumbnailUrl: 'https://via.placeholder.com/320x180' },
+    { id: '10', title: 'Recommended Video 10', channel: 'Channel 10', thumbnailUrl: 'https://via.placeholder.com/320x180' },
   ])
 
   useEffect(() => {
@@ -45,20 +53,7 @@ function App() {
     loadInitialData()
   }, [])
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY
-      if (currentScrollY > lastScrollY.current && currentScrollY > 200) {
-        setIsDrawerOpen(true)
-      } else if (currentScrollY < lastScrollY.current) {
-        setIsDrawerOpen(false)
-      }
-      lastScrollY.current = currentScrollY
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  
 
   return (
     <ThemeProvider defaultTheme="system" attribute="class">
@@ -74,7 +69,7 @@ function App() {
             </div>
           </div>
         </main>
-        <RecommendationsDrawer items={recommendations} isOpen={isDrawerOpen} />
+        <RecommendationsScroll items={recommendations}/>
       </div>
     </ThemeProvider>
   )

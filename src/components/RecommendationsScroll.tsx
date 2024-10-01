@@ -13,8 +13,8 @@ interface RecommendationsScrollAreaProps {
 
 export function RecommendationsScroll({ items }: RecommendationsScrollAreaProps) {
   return (
-    <ScrollArea className="ms-12 my-8 border rounded-md">
-      <div className="flex w-max space-x-4 p-4">
+    <ScrollArea className="mx-4 overflow-x-auto border rounded-md my-4 p-4">
+      <div className="flex space-x-4">
         {items.length > 0 ? (
           items.map((item) => (
             <figure key={item.id} className="shrink-0">
@@ -36,8 +36,6 @@ export function RecommendationsScroll({ items }: RecommendationsScrollAreaProps)
                 </div>
               </figcaption>
             </figure>
-
-
           ))
         ) : (
           <div className="text-center py-8 w-full">

@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from "react"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-import { connectToBroker, sendMessage } from '../brokerService'
-import { v4 as uuidv4 } from 'uuid'  // Import UUID library
+import React, { useState, useEffect, useRef } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { connectToBroker, sendMessage } from '../brokerService';
+import { v4 as uuidv4 } from 'uuid'; // Import UUID library
 
 interface ChatMessage {
   id: string;
@@ -18,8 +18,8 @@ interface ChatProps {
 }
 
 export function Chat({ messages }: ChatProps) {
-  const [newMessage, setNewMessage] = useState("")
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(messages)
+  const [newMessage, setNewMessage] = useState("");
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(messages);
 
   // Generate a unique client ID
   const clientIdRef = useRef<string>(uuidv4());
@@ -47,7 +47,7 @@ export function Chat({ messages }: ChatProps) {
         }
       });
     });
-  }, [])
+  }, []);
 
   const handleSendMessage = () => {
     if (newMessage.trim() === "") return;
@@ -58,15 +58,22 @@ export function Chat({ messages }: ChatProps) {
       content: newMessage,
       senderId: clientIdRef.current,
       senderName: 'You'
-    }
+    };
 
     // Send the message to the broker
     sendMessage(sentMessage);
 
     // Add the new message to the chat immediately
-    setChatMessages((prevMessages) => [...prevMessages, sentMessage])
-    setNewMessage("")
-  }
+    setChatMessages((prevMessages) => [...prevMessages, sentMessage]);
+    setNewMessage("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault(); // Prevent the default behavior (newline)
+      handleSendMessage(); // Send the message
+    }
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -87,6 +94,7 @@ export function Chat({ messages }: ChatProps) {
           placeholder="Type your message here."
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
+          onKeyDown={handleKeyDown} // Add the key down handler here
           className="flex-grow resize-none"
         />
         <Button 
@@ -97,5 +105,5 @@ export function Chat({ messages }: ChatProps) {
         </Button>
       </div>
     </div>
-  )
+  );
 }

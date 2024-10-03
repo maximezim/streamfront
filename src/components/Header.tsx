@@ -10,8 +10,11 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
 
+interface HeaderProps {
+  onLogin: (username: string) => void
+}
 
-const Header = () => {
+const Header: React.FC<HeaderProps> = ({ onLogin }) => {
   return (
     <header className="w-full py-4 px-6 flex items-center justify-between bg-background">
       <div className="flex items-center">
@@ -47,7 +50,7 @@ const Header = () => {
         </NavigationMenu>
       </div>
       <div className="ml-auto flex items-center gap-3">
-        <Login />
+      <Login onLogin={onLogin} />
         <Signup />
       </div>
     </header>

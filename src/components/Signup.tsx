@@ -49,6 +49,9 @@ export function Signup() {
           </div>
         </div>
         <DialogFooter>
+        <DialogTrigger asChild>
+            <Button variant="destructive">Annuler</Button>
+          </DialogTrigger>
           <Button type="submit">S'inscrire</Button>
         </DialogFooter>
       </DialogContent>

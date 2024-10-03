@@ -13,6 +13,12 @@ function App() {
   // const [videoData, setVideoData] = useState(null)
   // const [chatMessages, setChatMessages] = useState([])
   // const [recommendations, setRecommendations] = useState([])
+
+  const [username, setUsername] = useState<string | null>(null)
+
+  const handleLogin = (username: string) => {
+    setUsername(username)
+  }
   const [videoData] = useState({
     id: '1',
     title: 'Sample Video',
@@ -58,18 +64,18 @@ function App() {
   return (
     <ThemeProvider defaultTheme="system" attribute="class">
       <div className="min-h-screen bg-background text-foreground w-full">
-        <Header />
+        <Header onLogin={handleLogin} />
         <main className="container mx-auto p-4">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="lg:w-4/5 ">
               {videoData && <VideoPlayer video={videoData} />}
             </div>
-            <div className="lg:w-1/5 flex flex-col"> 
-              <Chat messages={chatMessages} />
+            <div className="lg:w-1/5 flex flex-col">
+              <Chat messages={chatMessages} username={username} />
             </div>
           </div>
         </main>
-        <RecommendationsScroll items={recommendations}/>
+        <RecommendationsScroll items={recommendations} />
       </div>
     </ThemeProvider>
   )

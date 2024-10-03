@@ -10,6 +10,7 @@ const BROKER_STREAMING_TOPIC = "chat-streaming"
 
 let client = null;
 
+
 export function connectToBroker(onMessageReceived) {
   if (!client) {
     // Using MQTT protocol with TCP
@@ -46,6 +47,6 @@ export function connectToBroker(onMessageReceived) {
 
 export function sendMessage(messageObject) {
   if (client) {
-    client.publish(BROKER_STREAMING_TOPIC, JSON.stringify(messageObject));
+    client.publish(BROKER_STREAMING_TOPIC, messageObject);
   }
 }

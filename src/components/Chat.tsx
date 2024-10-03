@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { connectToBroker, sendMessage } from '../brokerService';
-import { v4 as uuidv4 } from 'uuid'; // Import UUID library
+import { v4 as uuidv4 } from 'uuid';
 
 interface ChatMessage {
   id: string;
@@ -15,9 +15,10 @@ interface ChatMessage {
 
 interface ChatProps {
   messages: ChatMessage[];
+  username: string;
 }
 
-export function Chat({ messages }: ChatProps) {
+export function Chat({ messages, username }: ChatProps) {
   const [newMessage, setNewMessage] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(messages);
 
@@ -36,6 +37,7 @@ export function Chat({ messages }: ChatProps) {
           // Message already exists
           return prevMessages;
         } else {
+          console.log('Received new message:', messageObject);
           // Add new message
           const receivedMessage: ChatMessage = {
             id: messageObject.id,
@@ -57,11 +59,11 @@ export function Chat({ messages }: ChatProps) {
       id: uuidv4(),
       content: newMessage,
       senderId: clientIdRef.current,
-      senderName: 'You'
+      senderName: username
     };
 
     // Send the message to the broker
-    sendMessage(sentMessage);
+    sendMessage(JSON.stringify(sentMessage));
 
     // Add the new message to the chat immediately
     setChatMessages((prevMessages) => [...prevMessages, sentMessage]);
@@ -98,6 +100,7 @@ export function Chat({ messages }: ChatProps) {
           className="flex-grow resize-none"
         />
         <Button 
+          disabled={username === ''}
           onClick={handleSendMessage} 
           className="mt-2 w-full"
         >

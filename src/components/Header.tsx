@@ -13,9 +13,25 @@ import {
 interface HeaderProps {
   onLogin: (username: string) => void
   setPage: (page: string) => void
+  username : string 
 }
 
-const Header = ({ onLogin, setPage }: HeaderProps) => {
+const Header = ({ onLogin, setPage, username }: HeaderProps) => {
+
+  const headlog = (username: string) => {
+    if(username != '') {
+      return (
+        <p className="font-semibold mr-4">{username}</p>
+      )
+    }else{
+      return( 
+        <>
+        <Login onLogin={onLogin} />
+        <Signup />
+        </>
+      )
+    }
+  }
   
   return (
     <header className="w-full py-4 px-6 flex items-center justify-between bg-background">
@@ -34,7 +50,7 @@ const Header = ({ onLogin, setPage }: HeaderProps) => {
               </NavigationMenuContent>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <NavigationMenuTrigger>Following</NavigationMenuTrigger>
+              <NavigationMenuTrigger>Data</NavigationMenuTrigger>
               <NavigationMenuContent className="flex flex-col px-7 w-full divide-y">  
                 <NavigationMenuLink className="w-32">
                   <p className="text-sm leading-tight py-3 cursor-pointer" onClick={()=> setPage("dashboard")}>Dashboard</p>
@@ -45,8 +61,7 @@ const Header = ({ onLogin, setPage }: HeaderProps) => {
         </NavigationMenu>
       </div>
       <div className="ml-auto flex items-center gap-3">
-        <Login onLogin={onLogin} />
-        <Signup />
+        {headlog(username)}
       </div>
     </header>
   )

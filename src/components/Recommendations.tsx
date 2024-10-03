@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 
 interface RecommendationItem {
-  id: string;
+  id: number;
   title: string;
   thumbnailUrl: string;
 }

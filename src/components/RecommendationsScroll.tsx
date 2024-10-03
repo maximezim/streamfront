@@ -1,7 +1,7 @@
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 interface RecommendationItem {
-  id: string;
+  id: number;
   title: string;
   channel: string;
   thumbnailUrl: string;

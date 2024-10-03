@@ -1,6 +1,6 @@
 
 interface StreamItem {
-  id: string;
+  id: number;
   title: string;
   channel: string;
   thumbnailUrl: string;
@@ -8,14 +8,15 @@ interface StreamItem {
 
 interface StreamItemsProps {
     items: StreamItem[];
+    toStream: (id: number) => void;
 }
 
 
-export function Streams({ items }: StreamItemsProps) {
+export function Streams({ items, toStream }: StreamItemsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {items.map((item) => (
-        <div className="flex aspect-video flex-col gap-2">
+        <div className="flex aspect-video flex-col gap-2 cursor-pointer" onClick={() => toStream(item.id)}>
             <div className="overflow-hidden rounded-md relative">
                 <img src={item.thumbnailUrl} alt={item.title} className="w-full h-auto" />
                 <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white text-xs p-1 rounded">

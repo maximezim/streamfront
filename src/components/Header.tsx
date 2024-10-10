@@ -1,14 +1,6 @@
 import Login from "@/components/Login"
 import { Signup } from "@/components/Signup"
-
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu"
+import { Button } from "./ui/button"
 
 interface HeaderProps {
   onLogin: (username: string) => void
@@ -39,26 +31,10 @@ const Header = ({ onLogin, setPage, username }: HeaderProps) => {
         <div className="mr-4">
           <div className="w-10 h-10 bg-primary rounded-full"></div>
         </div>
-        <NavigationMenu>
-          <NavigationMenuList>
-            <NavigationMenuItem>
-              <NavigationMenuTrigger>Browse</NavigationMenuTrigger>
-              <NavigationMenuContent className="flex flex-col px-7 w-full divide-y"> 
-                <NavigationMenuLink className="w-32">
-                  <p className="text-sm leading-tight py-3 cursor-pointer" onClick={()=> setPage("home")}>Home</p>
-                </NavigationMenuLink>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuTrigger>Data</NavigationMenuTrigger>
-              <NavigationMenuContent className="flex flex-col px-7 w-full divide-y">  
-                <NavigationMenuLink className="w-32">
-                  <p className="text-sm leading-tight py-3 cursor-pointer" onClick={()=> setPage("dashboard")}>Dashboard</p>
-                </NavigationMenuLink> 
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
+        <nav className="flex space-x-4">
+          <Button variant="ghost" className="text-sm" onClick={() => setPage("home")}>Home</Button>
+          <Button variant="ghost" className="text-sm" onClick={() => setPage("dashboard")}>Dashboard</Button>
+        </nav>
       </div>
       <div className="ml-auto flex items-center gap-3">
         {headlog(username)}

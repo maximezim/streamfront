@@ -23,6 +23,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.3.0",
+    "framer-motion": "^11.11.7",
     "front": "file:",
     "lucide-react": "^0.445.0",
     "mqtt": "^5.10.1",

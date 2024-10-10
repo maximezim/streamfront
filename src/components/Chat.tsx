@@ -78,7 +78,7 @@ export function Chat({ messages, username }: ChatProps) {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white">
       <ScrollArea className="flex-grow rounded-md border">
         <div className="p-4">
           {chatMessages.map((message) => (

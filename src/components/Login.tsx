@@ -34,9 +34,9 @@ const Login = ({ onLogin }: LoginProps) => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Connexion</DialogTitle>
+          <DialogTitle className="text-2xl">Log in</DialogTitle>
           <DialogDescription>
-            Entrez vos identifiants pour vous connecter à votre compte.
+            Enter your credentials to log in to your account.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 pt-3 pb-4">
@@ -53,7 +53,7 @@ const Login = ({ onLogin }: LoginProps) => {
           </div>
           <div className="space-y-1 w-full">
             <Label htmlFor="current" className="text-base">
-              Mot de passe
+              Password
             </Label>
             <Input
               id="current"
@@ -65,7 +65,7 @@ const Login = ({ onLogin }: LoginProps) => {
           </div>
         </div>
         <DialogFooter>
-          <Button type="submit" onClick={handleLogin}>Se connecter</Button>
+          <Button type="submit" onClick={handleLogin}>Log in</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

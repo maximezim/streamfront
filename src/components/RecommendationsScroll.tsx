@@ -13,7 +13,7 @@ interface RecommendationsScrollAreaProps {
 
 export function RecommendationsScroll({ items }: RecommendationsScrollAreaProps) {
   return (
-    <ScrollArea className="mx-4 overflow-x-auto border rounded-md my-4 p-4">
+    <ScrollArea className="mx-4 overflow-x-auto border rounded-md my-4 p-4 bg-white relative z-10">
       <div className="flex space-x-4">
         {items.length > 0 ? (
           items.map((item) => (

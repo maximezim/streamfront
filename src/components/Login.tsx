@@ -19,7 +19,6 @@ interface LoginProps {
 const Login = ({ onLogin }: LoginProps) => {
 
   const [pseudo, setPseudo] = useState('')
-  const [password, setPassword] = useState('')
   const [isOpen, setIsOpen] = useState(false)
 
   const handleLogin = () => {
@@ -30,13 +29,13 @@ const Login = ({ onLogin }: LoginProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Log In</Button>
+        <Button variant="outline">My pseudo</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Log in</DialogTitle>
+          <DialogTitle className="text-2xl">My pseudo</DialogTitle>
           <DialogDescription>
-            Enter your credentials to log in to your account.
+            Enter the pseudo you want to use
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 pt-3 pb-4">
@@ -51,21 +50,9 @@ const Login = ({ onLogin }: LoginProps) => {
               className="w-full"
             />
           </div>
-          <div className="space-y-1 w-full">
-            <Label htmlFor="current" className="text-base">
-              Password
-            </Label>
-            <Input
-              id="current"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full"
-            />
-          </div>
         </div>
         <DialogFooter>
-          <Button type="submit" onClick={handleLogin}>Log in</Button>
+          <Button type="submit" onClick={handleLogin}>Submit</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

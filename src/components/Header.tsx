@@ -19,7 +19,6 @@ const Header = ({ onLogin, setPage, username }: HeaderProps) => {
       return( 
         <>
         <Login onLogin={onLogin} />
-        <Signup />
         </>
       )
     }

@@ -1,5 +1,8 @@
 import * as React from "react";
 import { delay, motion } from "framer-motion";
+import { sendStream } from "@/brokerService";
+import { useEffect } from "react";
+import { useVideo } from "@/VideoContext";
 
 const containerMotion = {
   hidden: { opacity: 1, scale: 0 },
@@ -33,7 +36,16 @@ interface StreamItemsProps {
   toStream: (id: number) => void;
 }
 
+
 export function Streams({ items, toStream }: StreamItemsProps) {
+
+  const {setVideoData} = useVideo();
+
+  const handleClicked = (id: number) => {
+    sendStream(id, setVideoData);
+    toStream(id);
+  }
+
   return (
     <motion.div
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8 relative z-10"
@@ -45,7 +57,7 @@ export function Streams({ items, toStream }: StreamItemsProps) {
         <motion.div
           key={item.id}
           className="relative z-10 bg-white flex aspect-video flex-col cursor-pointer border-2 rounded-md border-slate-50 shadow-sm"
-          onClick={() => toStream(item.id)}
+          onClick={() => handleClicked(item.id)}
           variants={itemMotion}
         >
           <div className="overflow-hidden rounded-t-md relative">

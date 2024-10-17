@@ -1,5 +1,4 @@
 import Login from "@/components/Login"
-import { Signup } from "@/components/Signup"
 import { Button } from "./ui/button"
 
 interface HeaderProps {

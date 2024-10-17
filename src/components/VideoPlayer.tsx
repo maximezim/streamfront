@@ -1,14 +1,9 @@
-import React, { useRef, useState, useEffect } from 'react';
-import ReactPlayer from 'react-player';
+import React, { useRef, useEffect } from 'react';
 import '@/css/VideoPlayer.css';
-import videoUrl from '../assets/video.mp4';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import screenfull from 'screenfull';
+import { useVideo } from '@/VideoContext';
 
-import { IoPlay, IoPauseOutline, IoVolumeHigh, IoVolumeMute } from 'react-icons/io5';
-import { BsFullscreen } from "react-icons/bs";
-import { Slider } from './ui/slider';
-
+/*
 interface VideoPlayerProps {
   video: {
     id: number;
@@ -17,122 +12,52 @@ interface VideoPlayerProps {
     thumbnailUrl: string;
   };
 }
+*/
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
-  const playerRef = useRef<ReactPlayer>(null);
+const VideoPlayer: React.FC = () => {
+  const playerRef = useRef<HTMLVideoElement>(null);
   const playerContainerRef = useRef<HTMLDivElement>(null);
-  const delay = 1500;
-  const [playing, setPlaying] = useState(true);
-  const [volume, setVolume] = useState(0.5);
-  const [muted, setMuted] = useState(false);
-  const [hoverVisible, setHoverVisible] = useState(true);
-  const [isFullScreen, setIsFullScreen] = useState(false);
-  const [isMouseMoving, setIsMouseMoving] = useState(false);
-  const [duration, setDuration] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const mouseMoveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const mediaSourceRef = useRef<MediaSource | null>(null);
+  const sourceBufferRef = useRef<SourceBuffer | null>(null);
 
-  const handlePlayPause = () => {
-    setPlaying(!playing);
-    if (!playing && isFullScreen) {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
-      }
-      hoverTimeoutRef.current = setTimeout(() => {
-        setHoverVisible(false);
-      }, delay);
-    }
-  };
-
-  const handleMouseMove = () => {
-    setHoverVisible(true);
-    setIsMouseMoving(true);
-    if (mouseMoveTimeoutRef.current) {
-      clearTimeout(mouseMoveTimeoutRef.current);
-    }
-    mouseMoveTimeoutRef.current = setTimeout(() => {
-      setIsMouseMoving(false);
-      if (isFullScreen) {
-        setHoverVisible(false);
-      }
-    }, delay);
-  };
-
-  const handleMouseEnter = () => {
-    setHoverVisible(true);
-  };
-
-  const handleMouseLeave = () => {
-    setHoverVisible(false);
-  };
-
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setVolume(parseFloat(e.target.value));
-  };
-
-  const handleMute = () => {
-    setMuted(!muted);
-  };
-
-  const handleFullScreen = () => {
-    if (screenfull.isEnabled && playerContainerRef.current) {
-      screenfull.toggle(playerContainerRef.current);
-      setIsFullScreen(!isFullScreen);
-    }
-  };
-
-  const handleProgress = (state: { playedSeconds: number }) => {
-    setCurrentTime(state.playedSeconds);
-  };
-
-  const handleDuration = (duration: number) => {
-    setDuration(duration);
-  };
-
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTime = parseFloat(e.target.value);
-    setCurrentTime(newTime);
-    if (playerRef.current) {
-      playerRef.current.seekTo(newTime, 'seconds');
-    }
-  };
+  const { videoData } = useVideo();
 
   useEffect(() => {
-    if (isFullScreen && !isMouseMoving) {
-      const timeout = setTimeout(() => {
-        setHoverVisible(false);
-      }, delay);
-      return () => clearTimeout(timeout);
+    if (videoData && mediaSourceRef.current && sourceBufferRef.current) {
+      if (sourceBufferRef.current.updating) {
+        sourceBufferRef.current.addEventListener('updateend', () => {
+          sourceBufferRef.current?.appendBuffer(videoData);
+        }, { once: true });
+      } else {
+        sourceBufferRef.current.appendBuffer(videoData);
+      }
     }
-  }, [isFullScreen, isMouseMoving]);
+  }, [videoData]);
 
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
-  };
+  useEffect(() => {
+    if (playerRef.current) {
+      const mediaSource = new MediaSource();
+      mediaSourceRef.current = mediaSource;
+
+      playerRef.current.src = URL.createObjectURL(mediaSource);
+
+      mediaSource.addEventListener('sourceopen', () => {
+        const sourceBuffer = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.42E01E, mp4a.40.2"');
+        sourceBufferRef.current = sourceBuffer;
+      });
+    }
+  }, []);
+
 
   return (
     <div className="relative z-10 h-full hover_class" ref={playerContainerRef}>
-      <AspectRatio ratio={16 / 9} className="h-full" onMouseMove={handleMouseMove} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-        <ReactPlayer
-          ref={playerRef}
-          url={videoUrl}
-          playing={playing}
-          volume={volume}
-          muted={muted}
-          controls={false}
-          width="100%"
-          height="100%"
-          className="rounded-md overflow-hidden react-player-controls"
-          onProgress={handleProgress}
-          onDuration={handleDuration}
-        />
+      <AspectRatio ratio={16 / 9} className="h-full">
+        <video ref={playerRef} controls className='w-full h-full'></video>
+        {/* <ReactPlayer
         {(hoverVisible && isMouseMoving) &&  (
           <div className='video_hover flex flex-col justify-between'>
             <div className="w-full p-4 text-white text-lg">
-              {video.title}
+              {"a changer"}
             </div>
             <div className="custom_controls text-white flex justify-between w-full p-4">
               <div className='flex items-center'>
@@ -150,7 +75,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
                   max={duration}
                   step="0.1"
                   value={currentTime}
-                  onChange={handleSeek}
+                 
                   className="progress-slider w-full"
                 />
                 <span>{formatTime(duration)}</span>
@@ -172,9 +97,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
                 />
                 <BsFullscreen size={22} onClick={handleFullScreen} className="cursor-pointer" />
               </div>
-            </div>
+            </div> 
           </div>
         )}
+        */}
       </AspectRatio>
     </div>
   );

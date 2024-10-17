@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { ThemeProvider } from './components/theme-provider'
 import Header from './components/Header'
 import VideoPlayer from './components/VideoPlayer'
@@ -10,14 +10,10 @@ import { Separator } from './components/ui/separator'
 import { cn } from "@/lib/utils";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { motion, AnimatePresence } from 'framer-motion'
-
-// import { fetchVideoData, fetchChatMessages, fetchRecommendations } from './api/streamingApi'
-// import { subscribeToLiveChat } from './brokers/chatBroker'
+import { brokerService } from './brokerService';
+import { VideoProvider } from './VideoContext';
 
 function App() {
-  // const [videoData, setVideoData] = useState(null)
-  // const [chatMessages, setChatMessages] = useState([])
-  // const [recommendations, setRecommendations] = useState([])
   const [username, setUsername] = useState('')
   const [page, setPage] = useState("home");
   const [streamId, setStreamId] = useState(1);
@@ -26,16 +22,6 @@ function App() {
     setStreamId(id)
     setPage("stream")
   }
-
-  const findStreamById = (id: number) => {
-    let stream = streams.find((stream) => stream.id === id)
-    if(stream === undefined) {
-      return streams[0]
-    }else{
-      return stream
-    }
-
-  };
 
   const handleLogin = (username: string) => {
     setUsername(username)
@@ -68,19 +54,7 @@ function App() {
 
   useEffect(() => {
     const loadInitialData = async () => {
-      // const video = await fetchVideoData()
-      // setVideoData(video)
-
-      // const messages = await fetchChatMessages(video.id)
-      // setChatMessages(messages)
-
-      // const recs = await fetchRecommendations(video.id)
-      // setRecommendations(recs)
-
-      // Subscribe to live chat updates
-      // subscribeToLiveChat(video.id, (newMessage) => {
-      //   setChatMessages((prevMessages) => [...prevMessages, newMessage])
-      // })
+      brokerService();
     }
 
     loadInitialData()
@@ -153,7 +127,7 @@ function App() {
             <main className="container mx-auto p-4">
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="lg:w-4/5 ">
-                  {<VideoPlayer video={findStreamById(streamId)} />}
+                  {<VideoPlayer />}
                 </div>
                 <div className="lg:w-1/5 flex flex-col relative z-10">
                   <Chat messages={chatMessages} username={username}/>
@@ -218,12 +192,14 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="system" attribute="class">
+      <VideoProvider>
       <div className="bg-background text-foreground w-full">
         <Header setPage={setPage} onLogin={handleLogin} username={username} />
         <AnimatePresence mode='wait'>
           {affichagePage()}
         </AnimatePresence>
       </div>
+      </VideoProvider>
     </ThemeProvider>
   )
 }

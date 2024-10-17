@@ -9,6 +9,7 @@ import { Dashboard } from './components/Dashboard'
 import { Separator } from './components/ui/separator'
 import { cn } from "@/lib/utils";
 import { DotPattern } from "@/components/ui/dot-pattern";
+import { motion, AnimatePresence } from 'framer-motion'
 
 // import { fetchVideoData, fetchChatMessages, fetchRecommendations } from './api/streamingApi'
 // import { subscribeToLiveChat } from './brokers/chatBroker'
@@ -41,8 +42,7 @@ function App() {
   }
 
 
-  const [chatMessages] = useState([
-  ])
+  const [chatMessages] = useState([])
   const [streams] = useState([
     { id: 1, title: 'Recommended Video 1', channel: 'Channel 1', thumbnailUrl: 'https://cdn-0001.qstv.on.epicgames.com/FnWjYxEYtXzOlTXnBz/image/landscape_comp_m.jpeg' },
     { id: 2, title: 'Recommended Video 2', channel: 'Channel 2', thumbnailUrl: 'https://cdn-0001.qstv.on.epicgames.com/XgQiSOKbxIsYKsmlYl/image/landscape_comp_m.jpeg' },
@@ -51,8 +51,6 @@ function App() {
     { id: 5, title: 'Recommended Video 5', channel: 'Channel 5', thumbnailUrl: 'https://i.pinimg.com/736x/bb/ce/d3/bbced3e43f35b7a036ede45e39cb8b4c.jpg' },
     { id: 6, title: 'Recommended Video 6', channel: 'Channel 6', thumbnailUrl: 'https://pbs.twimg.com/media/EcIbjlJWkAQILHo.jpg:large' },
     { id: 7, title: 'Recommended Video 7', channel: 'Channel 7', thumbnailUrl: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1926680/ss_5e1af78cb3675067fc7b0662656e4423d1657712.600x338.jpg?t=1724240226' },
-    
-
   ])
 
   const [recommendations] = useState([
@@ -67,7 +65,6 @@ function App() {
     { id: 9, title: 'Recommended Video 9', channel: 'Channel 9', thumbnailUrl: 'https://via.placeholder.com/320x180' },
     { id: 10, title: 'Recommended Video 10', channel: 'Channel 10', thumbnailUrl: 'https://via.placeholder.com/320x180' },
   ])
-
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -89,30 +86,70 @@ function App() {
     loadInitialData()
   }, [])
 
-
   function affichagePage() {
     switch (page) {
       case "home":
         return (
-          <main className="container mx-auto p-4 mb-6">
-            <h1 className="text-4xl font-bold mb-4">Home</h1>
-            <p className="text-lg mb-6">
-              Welcome to the home page. This is where you can browse and watch videos.
-            </p>
-            <div className='relative z-10'>
-              <Separator className='mb-9' />
-              <Streams items={streams} toStream={toStream} />
-              <DotPattern
-                className={cn(
-                  "[mask-image:radial-gradient(circle_at_center,white,transparent)]", "h-full pt-3"
-                )}
-              />
-            </div>
-          </main>
+          <motion.div
+            key="home"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <main className="container mx-auto p-4 mb-6">
+              <AnimatePresence mode='wait'>
+                <motion.div
+                  key="home-title"
+                  initial={{ translateY: 20, opacity: 0 }}
+                  animate={{ translateY: 0, opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 50,
+                  }}
+                >
+                  <h1 className="text-4xl font-bold mb-4">Home</h1>
+                </motion.div>
+                <motion.div
+                  key="home-description"
+                  initial={{ translateY: 20, opacity: 0 }}
+                  animate={{ translateY: 0, opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 50,
+                    delay: 0.1
+                  }}
+                >
+                  <p className="text-lg mb-6">
+                    Welcome to the home page. This is where you can browse and watch videos.
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+              <div className='relative z-10'>
+                <Separator className='mb-9' />
+                <Streams items={streams} toStream={toStream} />
+                <DotPattern
+                  className={cn(
+                    "[mask-image:radial-gradient(circle_at_center,white,transparent)]", "h-full pt-3"
+                  )}
+                />
+              </div>
+            </main>
+          </motion.div>
         )
       case "stream":
         return (
-          <>
+          <motion.div
+            key="stream"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <main className="container mx-auto p-4">
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="lg:w-4/5 ">
@@ -129,18 +166,52 @@ function App() {
                   "[mask-image:radial-gradient(circle_at_center,white,transparent)]", "h-full pt-3"
                 )}
               />
-          </>
+          </motion.div>
         )
       case "dashboard":
         return (
-          <main className="container mx-auto p-4 h-full">
-            <h1 className="text-4xl font-bold mb-4">Dashboard</h1>
-            <p className="text-lg mb-6">
-              Welcome to the dashboard. This is where you can see analytics and other
-            </p>
-            <Separator/>
-            <Dashboard />
-          </main>
+          <motion.div
+            key="dashboard"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <main className="container mx-auto p-4 h-full">
+              <AnimatePresence mode='wait'>
+                <motion.div
+                  key="dashboard-title"
+                  initial={{ translateY: 20, opacity: 0 }}
+                  animate={{ translateY: 0, opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 50,
+                  }}
+                >
+                  <h1 className="text-4xl font-bold mb-4">Dashboard</h1>
+                </motion.div>
+                <motion.div
+                  key="dashboard-description"
+                  initial={{ translateY: 20, opacity: 0 }}
+                  animate={{ translateY: 0, opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 50,
+                    delay: 0.1
+                  }}>
+                  <p className="text-lg mb-6">
+                    Welcome to the dashboard. This is where you can see analytics and other
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+              <Separator/>
+              <Dashboard />
+            </main>
+          </motion.div>
         )
     }
   }
@@ -149,7 +220,9 @@ function App() {
     <ThemeProvider defaultTheme="system" attribute="class">
       <div className="bg-background text-foreground w-full">
         <Header setPage={setPage} onLogin={handleLogin} username={username} />
-        {affichagePage()}
+        <AnimatePresence mode='wait'>
+          {affichagePage()}
+        </AnimatePresence>
       </div>
     </ThemeProvider>
   )

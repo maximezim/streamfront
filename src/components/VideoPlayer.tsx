@@ -7,6 +7,7 @@ import screenfull from 'screenfull';
 
 import { IoPlay, IoPauseOutline, IoVolumeHigh, IoVolumeMute } from 'react-icons/io5';
 import { BsFullscreen } from "react-icons/bs";
+import { Slider } from './ui/slider';
 
 interface VideoPlayerProps {
   video: {
@@ -20,12 +21,15 @@ interface VideoPlayerProps {
 const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
   const playerRef = useRef<ReactPlayer>(null);
   const playerContainerRef = useRef<HTMLDivElement>(null);
+  const delay = 1500;
   const [playing, setPlaying] = useState(true);
   const [volume, setVolume] = useState(0.5);
   const [muted, setMuted] = useState(false);
   const [hoverVisible, setHoverVisible] = useState(true);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isMouseMoving, setIsMouseMoving] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const mouseMoveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -37,7 +41,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
       }
       hoverTimeoutRef.current = setTimeout(() => {
         setHoverVisible(false);
-      }, 2000);
+      }, delay);
     }
   };
 
@@ -52,7 +56,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
       if (isFullScreen) {
         setHoverVisible(false);
       }
-    }, 2000);
+    }, delay);
   };
 
   const handleMouseEnter = () => {
@@ -78,14 +82,36 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
     }
   };
 
+  const handleProgress = (state: { playedSeconds: number }) => {
+    setCurrentTime(state.playedSeconds);
+  };
+
+  const handleDuration = (duration: number) => {
+    setDuration(duration);
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTime = parseFloat(e.target.value);
+    setCurrentTime(newTime);
+    if (playerRef.current) {
+      playerRef.current.seekTo(newTime, 'seconds');
+    }
+  };
+
   useEffect(() => {
     if (isFullScreen && !isMouseMoving) {
       const timeout = setTimeout(() => {
         setHoverVisible(false);
-      }, 2000);
+      }, delay);
       return () => clearTimeout(timeout);
     }
   }, [isFullScreen, isMouseMoving]);
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+  };
 
   return (
     <div className="relative z-10 h-full hover_class" ref={playerContainerRef}>
@@ -100,6 +126,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
           width="100%"
           height="100%"
           className="rounded-md overflow-hidden react-player-controls"
+          onProgress={handleProgress}
+          onDuration={handleDuration}
         />
         {(hoverVisible && isMouseMoving) &&  (
           <div className='video_hover flex flex-col justify-between'>
@@ -114,11 +142,24 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
                   <IoPlay size={24} onClick={handlePlayPause} className="cursor-pointer" />
                 )}
               </div>
+              <div className='flex items-center gap-4 w-full px-8'>
+                <span>{formatTime(currentTime)}</span>
+                <input
+                  type="range"
+                  min="0"
+                  max={duration}
+                  step="0.1"
+                  value={currentTime}
+                  onChange={handleSeek}
+                  className="progress-slider w-full"
+                />
+                <span>{formatTime(duration)}</span>
+              </div>
               <div className='flex items-center gap-4'>
                 {muted ? (
-                  <IoVolumeMute size={24} onClick={handleMute} className="cursor-pointer" />
+                  <IoVolumeMute size={22} onClick={handleMute} className="cursor-pointer" />
                 ) : (
-                  <IoVolumeHigh size={24} onClick={handleMute} className="cursor-pointer" />
+                  <IoVolumeHigh size={22} onClick={handleMute} className="cursor-pointer" />
                 )}
                 <input
                   type="range"
@@ -127,7 +168,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ video }) => {
                   step="0.05"
                   value={volume}
                   onChange={handleVolumeChange}
-                  className="volume-slider"
+                  className="volume-slider w-24"
                 />
                 <BsFullscreen size={22} onClick={handleFullScreen} className="cursor-pointer" />
               </div>

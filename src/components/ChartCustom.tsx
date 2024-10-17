@@ -37,8 +37,8 @@ export const ChartCustom = ({label,color,data,max,delay} : ChartCustomProps) => 
             animate={{ scale: 1 }}
             transition={{
                 type: "spring",
-                stiffness: 260,
-                damping: 20,
+                stiffness: 200,
+                damping: 40,
                 delay: delay
             }}>
            
@@ -60,7 +60,7 @@ export const ChartCustom = ({label,color,data,max,delay} : ChartCustomProps) => 
                 className="first:fill-muted last:fill-background"
                 polarRadius={[86, 74]}
             />
-            <RadialBar dataKey="value" background />
+            <RadialBar dataKey="value" background animationBegin={delay*1000}/>
             <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
             <Label
                 content={({ viewBox }) => {

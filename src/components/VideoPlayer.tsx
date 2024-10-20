@@ -3,7 +3,7 @@ import brokerContext from '@/broker_context';
 import { VideoPacket } from '@/broker';
 
 const VideoPlayer: React.FC = () => {
-  // Destructure packetList and chatMessages from brokerContext with default empty arrays
+  // Destructure packetList and messageList from brokerContext with default empty arrays
   const { packetList = [], messageList = [] } = useContext(brokerContext) || {};
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -17,6 +17,7 @@ const VideoPlayer: React.FC = () => {
   const isAppendingRef = useRef(false);
   const isMediaSourceOpenRef = useRef(false);
   const isInitializedRef = useRef(false); // Prevent multiple initializations
+  const shouldEndStreamRef = useRef(false); // Flag to indicate end of stream
 
   // Initialize MediaSource on component mount
   useEffect(() => {
@@ -96,6 +97,9 @@ const VideoPlayer: React.FC = () => {
     isMediaSourceOpenRef.current = false;
     isAppendingRef.current = false;
     sourceBufferRef.current = null;
+
+    // Clear buffer queue since we can't append anymore
+    bufferQueueRef.current = [];
   };
 
   // Function to handle MediaSource errors
@@ -111,7 +115,14 @@ const VideoPlayer: React.FC = () => {
   // Function to handle SourceBuffer 'updateend' event
   const onUpdateEnd = () => {
     isAppendingRef.current = false;
-    appendToBuffer();
+
+    // If we should end the stream and the buffer queue is empty, end it
+    if (shouldEndStreamRef.current && bufferQueueRef.current.length === 0 && mediaSourceRef.current) {
+      mediaSourceRef.current.endOfStream();
+      console.log('Called endOfStream on MediaSource.');
+    } else {
+      appendToBuffer();
+    }
   };
 
   // Listen for incoming video packets and add them to the buffer queue
@@ -132,15 +143,10 @@ const VideoPlayer: React.FC = () => {
       messageList.forEach((msg) => {
         if (msg.topic === 'go-streaming' && msg.payload.toString() === 'EOSTREAMING') {
           console.log('Received EOS message.');
-
-          if (mediaSourceRef.current && mediaSourceRef.current.readyState === 'open') {
-            try {
-              mediaSourceRef.current.endOfStream();
-              console.log('Called endOfStream on MediaSource.');
-            } catch (e) {
-              console.error('Error calling endOfStream:', e);
-            }
-          }
+          
+          // Set a flag to end the stream after all chunks are appended
+          shouldEndStreamRef.current = true;
+          appendToBuffer();
         }
       });
     }
@@ -160,6 +166,12 @@ const VideoPlayer: React.FC = () => {
       bufferQueueRef.current.length === 0
     ) {
       console.log('Conditions not met for appending. Skipping.');
+      return;
+    }
+
+    // Ensure the SourceBuffer hasn't been removed
+    if (!mediaSourceRef.current || mediaSourceRef.current.readyState !== 'open') {
+      console.warn('MediaSource is not open or has been closed. Aborting append.');
       return;
     }
 

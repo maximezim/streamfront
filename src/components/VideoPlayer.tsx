@@ -15,6 +15,7 @@ const VideoPlayer: React.FC = () => {
     if (packetList.length > 0) {
       const newPackets: Uint8Array[] = packetList.map((packet: VideoPacket) => packet.data);
       setBufferQueue((prevQueue) => [...prevQueue, ...newPackets]);
+      console.log('Nouveaux paquets ajoutés à la file d\'attente:', newPackets.length);
     }
   }, [packetList]);
 
@@ -25,20 +26,34 @@ const VideoPlayer: React.FC = () => {
     // Créer un nouvel objet MediaSource
     mediaSourceRef.current = new MediaSource();
     videoRef.current.src = URL.createObjectURL(mediaSourceRef.current);
+    console.log('MediaSource créé, en attente de l\'ouverture du SourceBuffer.');
 
     // Lorsque MediaSource est prêt, initialiser le SourceBuffer
     mediaSourceRef.current.addEventListener('sourceopen', () => {
       if (!mediaSourceRef.current || !videoRef.current) return;
 
-      // Créer un SourceBuffer pour MP4 (codecs vidéo et audio adaptés à votre flux)
       const mimeCodec = 'video/mp4; codecs="avc1.64001e, mp4a.40.2"'; // Ajustez les codecs selon le flux MP4
-      sourceBufferRef.current = mediaSourceRef.current.addSourceBuffer(mimeCodec);
+      try {
+        sourceBufferRef.current = mediaSourceRef.current.addSourceBuffer(mimeCodec);
+        console.log('SourceBuffer ajouté avec codec:', mimeCodec);
+      } catch (e) {
+        console.error('Erreur lors de l\'ajout du SourceBuffer:', e);
+        return;
+      }
 
-      // Surveiller l'événement de mise à jour du buffer
       sourceBufferRef.current.addEventListener('updateend', () => {
-        setIsSourceBufferUpdating(false); // Marquer la fin de la mise à jour du buffer
+        setIsSourceBufferUpdating(false);
+        console.log('Mise à jour du SourceBuffer terminée.');
+        
+        // Afficher la taille actuelle du buffer
+        if(!sourceBufferRef.current) return;
+        const bufferedRanges = sourceBufferRef.current.buffered;
+        for (let i = 0; i < bufferedRanges.length; i++) {
+          console.log(`Range ${i}: start=${bufferedRanges.start(i)}, end=${bufferedRanges.end(i)}`);
+        }
+
         if (bufferQueue.length > 0) {
-          appendBuffer(); // Ajouter le prochain segment dès que le buffer est disponible
+          appendBuffer();
         }
       });
 
@@ -50,16 +65,26 @@ const VideoPlayer: React.FC = () => {
   // Fonction pour ajouter des paquets au SourceBuffer
   const appendBuffer = () => {
     if (!sourceBufferRef.current || sourceBufferRef.current.updating || bufferQueue.length === 0) {
+      console.log('Le SourceBuffer est en cours de mise à jour ou la file d\'attente est vide.');
       return;
     }
 
-    // Prendre le premier paquet de la file d'attente
     const packet = bufferQueue.shift()!;
-    setBufferQueue([...bufferQueue]); // Mettre à jour la file d'attente
-
-    // Ajouter le paquet au SourceBuffer
+    setBufferQueue([...bufferQueue]);
     setIsSourceBufferUpdating(true);
-    sourceBufferRef.current.appendBuffer(packet);
+    try {
+      sourceBufferRef.current.appendBuffer(packet);
+      console.log('Paquet ajouté au SourceBuffer:', packet.byteLength);
+
+      // Afficher la taille du buffer après l'ajout du paquet
+      const bufferedRanges = sourceBufferRef.current.buffered;
+      for (let i = 0; i < bufferedRanges.length; i++) {
+        console.log(`Range après ajout du paquet ${i}: start=${bufferedRanges.start(i)}, end=${bufferedRanges.end(i)}`);
+      }
+
+    } catch (e) {
+      console.error('Erreur lors de l\'ajout d\'un paquet au SourceBuffer:', e);
+    }
   };
 
   useEffect(() => {

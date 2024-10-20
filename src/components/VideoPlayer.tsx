@@ -5,7 +5,10 @@ import { VideoPacket } from '@/broker';
 const VideoPlayer: React.FC = () => {
   const { packetList } = useContext(brokerContext);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const mediaSourceRef = useRef<MediaSource | null>(null); // Référence pour MediaSource
+  const sourceBufferRef = useRef<SourceBuffer | null>(null); // Référence pour SourceBuffer
   const [bufferQueue, setBufferQueue] = useState<Uint8Array[]>([]);
+  const [isSourceBufferUpdating, setIsSourceBufferUpdating] = useState(false);
 
   useEffect(() => {
     // Ajouter les nouvelles données à la file d'attente
@@ -15,29 +18,63 @@ const VideoPlayer: React.FC = () => {
     }
   }, [packetList]);
 
-  // Fonction pour afficher la vidéo lorsque les paquets sont disponibles
-  const displayVideo = () => {
-    if (bufferQueue.length === 0 || !videoRef.current) return;
+  // Fonction pour initialiser MediaSource et SourceBuffer
+  const initMediaSource = () => {
+    if (!videoRef.current) return;
 
-    const combinedBytes = new Uint8Array(bufferQueue.reduce((sum, packet) => sum + packet.length, 0));
-    let offset = 0;
-    bufferQueue.forEach((packet) => {
-      combinedBytes.set(packet, offset);
-      offset += packet.length;
+    // Créer un nouvel objet MediaSource
+    mediaSourceRef.current = new MediaSource();
+    videoRef.current.src = URL.createObjectURL(mediaSourceRef.current);
+
+    // Lorsque MediaSource est prêt, initialiser le SourceBuffer
+    mediaSourceRef.current.addEventListener('sourceopen', () => {
+      if (!mediaSourceRef.current || !videoRef.current) return;
+
+      // Créer un SourceBuffer pour MP4 (codecs vidéo et audio adaptés à votre flux)
+      const mimeCodec = 'video/mp4; codecs="avc1.64001e, mp4a.40.2"'; // Ajustez les codecs selon le flux MP4
+      sourceBufferRef.current = mediaSourceRef.current.addSourceBuffer(mimeCodec);
+
+      // Surveiller l'événement de mise à jour du buffer
+      sourceBufferRef.current.addEventListener('updateend', () => {
+        setIsSourceBufferUpdating(false); // Marquer la fin de la mise à jour du buffer
+        if (bufferQueue.length > 0) {
+          appendBuffer(); // Ajouter le prochain segment dès que le buffer est disponible
+        }
+      });
+
+      // Ajouter les paquets vidéo au buffer
+      appendBuffer();
     });
-
-    //creer un type mp4
-    //const blob = new Blob([combinedBytes], { type: 'video/mp4' }); // Ajustez le type si nécessaire
-    const blob = new Blob([combinedBytes], { type: 'video/mp4' }); // Ajustez le type si nécessaire
-    videoRef.current.src = URL.createObjectURL(blob);
-    videoRef.current.load();
-    videoRef.current.play();
   };
 
-  // Écoutez les mises à jour de la file d'attente et affichez la vidéo
+  // Fonction pour ajouter des paquets au SourceBuffer
+  const appendBuffer = () => {
+    if (!sourceBufferRef.current || sourceBufferRef.current.updating || bufferQueue.length === 0) {
+      return;
+    }
+
+    // Prendre le premier paquet de la file d'attente
+    const packet = bufferQueue.shift()!;
+    setBufferQueue([...bufferQueue]); // Mettre à jour la file d'attente
+
+    // Ajouter le paquet au SourceBuffer
+    setIsSourceBufferUpdating(true);
+    sourceBufferRef.current.appendBuffer(packet);
+  };
+
   useEffect(() => {
-    displayVideo();
-  }, [bufferQueue]);
+    // Initialiser MediaSource lors du montage
+    if (packetList.length > 0 && !mediaSourceRef.current) {
+      initMediaSource();
+    }
+  }, [packetList]);
+
+  useEffect(() => {
+    // Quand des paquets sont disponibles, les ajouter au SourceBuffer
+    if (!isSourceBufferUpdating && bufferQueue.length > 0) {
+      appendBuffer();
+    }
+  }, [bufferQueue, isSourceBufferUpdating]);
 
   return (
     <div>

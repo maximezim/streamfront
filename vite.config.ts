@@ -9,4 +9,14 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    host: "0.0.0.0",
+    proxy: {
+      '/videos': {
+        target: 'http://streaming-api.remicaulier.fr',
+        changeOrigin: true,
+        secure: true,
+      }
+    }
+  }
 })

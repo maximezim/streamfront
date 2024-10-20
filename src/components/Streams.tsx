@@ -1,8 +1,4 @@
-import * as React from "react";
-import { delay, motion } from "framer-motion";
-import { sendStream } from "@/brokerService";
-import { useEffect } from "react";
-import { useVideo } from "@/VideoContext";
+import { motion } from "framer-motion";
 
 const containerMotion = {
   hidden: { opacity: 1, scale: 0 },
@@ -25,10 +21,11 @@ const itemMotion = {
 };
 
 interface StreamItem {
-  id: number;
-  title: string;
-  channel: string;
-  thumbnailUrl: string;
+  ID: number;
+  DeletedAt: string | null;
+  VideoID: string;
+  CreatedAt: string;
+  UpdatedAt: string;
 }
 
 interface StreamItemsProps {
@@ -39,10 +36,7 @@ interface StreamItemsProps {
 
 export function Streams({ items, toStream }: StreamItemsProps) {
 
-  const {setVideoData} = useVideo();
-
   const handleClicked = (id: number) => {
-    sendStream(id, setVideoData);
     toStream(id);
   }
 
@@ -55,13 +49,13 @@ export function Streams({ items, toStream }: StreamItemsProps) {
     >
       {items.map((item) => (
         <motion.div
-          key={item.id}
+          key={item.ID}
           className="relative z-10 bg-white flex aspect-video flex-col cursor-pointer border-2 rounded-md border-slate-50 shadow-sm"
-          onClick={() => handleClicked(item.id)}
+          onClick={() => handleClicked(item.ID)}
           variants={itemMotion}
         >
           <div className="overflow-hidden rounded-t-md relative">
-            <img src={item.thumbnailUrl} alt={item.title} className="w-full h-auto" />
+            <div className="h-48 bg-slate-300" />
             <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white text-xs p-1 rounded">
               1,234 views • 1 day ago
             </div>
@@ -69,8 +63,8 @@ export function Streams({ items, toStream }: StreamItemsProps) {
           <div className="flex gap-4 p-3">
             <div className="h-10 w-10 bg-gray-300 rounded-full mr-1 mt-1"></div>
             <div className="flex flex-col">
-              <p className="text-base font-semibold">{item.title}</p>
-              <h3 className="text-sm italic">{item.channel}</h3>
+              <p className="text-base font-semibold">{item.VideoID}</p>
+              <h3 className="text-sm italic">{item.CreatedAt}</h3>
             </div>
           </div>
         </motion.div>

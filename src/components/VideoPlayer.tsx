@@ -3,7 +3,7 @@ import brokerContext from '@/broker_context';
 import { VideoPacket } from '@/broker';
 
 const VideoPlayer: React.FC = () => {
-  // Destructure packetList and messageList from brokerContext with default empty arrays
+  // Destructure packetList and chatMessages from brokerContext with default empty arrays
   const { packetList = [], messageList = [] } = useContext(brokerContext) || {};
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -16,6 +16,7 @@ const VideoPlayer: React.FC = () => {
   // Flags to manage appending state
   const isAppendingRef = useRef(false);
   const isMediaSourceOpenRef = useRef(false);
+  const isInitializedRef = useRef(false); // Prevent multiple initializations
 
   // Initialize MediaSource on component mount
   useEffect(() => {
@@ -35,6 +36,7 @@ const VideoPlayer: React.FC = () => {
       // Add event listeners for MediaSource
       mediaSourceRef.current.addEventListener('sourceopen', onSourceOpen);
       mediaSourceRef.current.addEventListener('error', onMediaSourceError);
+      mediaSourceRef.current.addEventListener('sourceclose', onSourceClose);
       
       console.log('MediaSource initialized and event listeners added.');
     }
@@ -44,6 +46,7 @@ const VideoPlayer: React.FC = () => {
       if (mediaSourceRef.current) {
         mediaSourceRef.current.removeEventListener('sourceopen', onSourceOpen);
         mediaSourceRef.current.removeEventListener('error', onMediaSourceError);
+        mediaSourceRef.current.removeEventListener('sourceclose', onSourceClose);
         mediaSourceRef.current = null;
         console.log('MediaSource event listeners removed.');
       }
@@ -55,6 +58,11 @@ const VideoPlayer: React.FC = () => {
   const onSourceOpen = () => {
     if (!mediaSourceRef.current || !videoRef.current) {
       console.error('MediaSource or video element not available.');
+      return;
+    }
+
+    if (isInitializedRef.current) {
+      console.warn('MediaSource already initialized.');
       return;
     }
 
@@ -70,6 +78,7 @@ const VideoPlayer: React.FC = () => {
         
         console.log('SourceBuffer created with codec:', mimeCodec);
         isMediaSourceOpenRef.current = true;
+        isInitializedRef.current = true;
         
         // Start appending if bufferQueue has data
         appendToBuffer();
@@ -79,6 +88,14 @@ const VideoPlayer: React.FC = () => {
     } else {
       console.error('MIME type or codec not supported:', mimeCodec);
     }
+  };
+
+  // Function to handle MediaSource 'sourceclose' event
+  const onSourceClose = () => {
+    console.log('MediaSource has been closed.');
+    isMediaSourceOpenRef.current = false;
+    isAppendingRef.current = false;
+    sourceBufferRef.current = null;
   };
 
   // Function to handle MediaSource errors
@@ -103,11 +120,6 @@ const VideoPlayer: React.FC = () => {
       const newPackets: Uint8Array[] = packetList.map((packet: VideoPacket) => packet.data);
       bufferQueueRef.current.push(...newPackets);
       console.log(`Added ${newPackets.length} new packet(s) to bufferQueue.`);
-
-      // Clear the packetList to prevent re-processing
-      // This depends on your context management; ensure this doesn't cause unintended side effects
-      // If your context handles this, you can skip this step
-      // Otherwise, consider using a state variable or another method to manage packet consumption
 
       appendToBuffer();
     }

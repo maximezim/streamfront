@@ -45,12 +45,12 @@ const VideoPlayer: React.FC = () => {
   };
 
   const finalizeVideoBlob = () => {
-    // Optionally, you can finalize the Blob or take any action needed when the stream ends
     console.log('Finalizing video Blob.');
-    // You can keep it as is or process it further as needed
+    
+    // Call appendToBlob to ensure the last chunk is added
+    appendToBlob();
   };
 
-  // Update the video element's source whenever the videoBlob state changes
   useEffect(() => {
     if (videoRef.current && videoBlob) {
       const videoUrl = URL.createObjectURL(videoBlob);

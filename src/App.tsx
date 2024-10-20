@@ -19,7 +19,7 @@ function App() {
 
   const {streamList} = useContext(brokerContext);
 
-  const toStream = (id: number) => {
+  const toStream = (id: string) => {
     requestVideoPacket(id);
     setPage("stream");
   }

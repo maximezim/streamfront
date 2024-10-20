@@ -37,7 +37,7 @@ let clientID: string;
 let streamList: DataObject[] = [];
 let packetList: VideoPacket[] = [];
 let chatMessages: any[] = [];
-let currentPacketNumber = 0;
+let currentPacketNumber = 1;
 
 const BROKER_HOSTNAME = window.location.hostname;
 const BROKER_PORT = 1886;
@@ -56,7 +56,9 @@ export const initializeMqttClient = (
   onChatMessage: (messages: any[]) => void
 ) => {
   onStreamListUpdate = onDataUpdate;
-  onPacketListUpdate = onPacketUpdate;
+  onPacketListUpdate = (newPackets: VideoPacket[]) => {
+    onPacketUpdate(newPackets);
+  };
   chatMessagesCallback = onChatMessage;
   
   clientID = uuidv4(); 
@@ -98,22 +100,22 @@ export const fetchStreamsFromAPI = async () => {
 
 
 
-export const requestVideoPacket = (videoId: number) => {
+export const requestVideoPacket = (videoId: string) => {
   if (client) {
     let channel_uuid = `stream-${clientID}`;
     const packetRequest = {
-      videoId: videoId,
-      packetNumber: currentPacketNumber,
+      video_id: videoId,
+      packet_number: currentPacketNumber,
       channel_uuid: channel_uuid, 
     };
 
-    subscribeToChannel(packetRequest.channel_uuid);
+    subscribeToChannel(videoId,packetRequest.channel_uuid);
     client.publish(BROKER_SERVICE_TOPIC, JSON.stringify(packetRequest));
     console.log('Requête pour le paquet', currentPacketNumber);
   }
 };
 
-const subscribeToChannel = (videoTopic: string) => {
+const subscribeToChannel = (videoID: string, videoTopic: string) => {
   if (client) {
     client.subscribe(videoTopic, (err) => {
       if (err) {
@@ -125,12 +127,13 @@ const subscribeToChannel = (videoTopic: string) => {
           if (receivedTopic === videoTopic) {
             try {
               const decodedMessage = msgpack.decode(new Uint8Array(message)) as VideoPacket;
-              packetList.push(decodedMessage);
-
-              onPacketListUpdate(packetList);
+              const updatedPacketList = [...packetList, decodedMessage];
+              console.log('Paquet reçu', decodedMessage);
+              console.log('Paquets reçus', updatedPacketList);
+              onPacketListUpdate(updatedPacketList);
 
               currentPacketNumber++;
-              requestNextPacket(clientID, videoTopic, currentPacketNumber);
+              requestNextPacket(videoID, videoTopic);
             } catch (error) {
               console.error('Erreur de décodage MsgPack', error);
             }
@@ -164,16 +167,16 @@ const subscribeToChannel = (videoTopic: string) => {
   }
 };
 
-const requestNextPacket = (clientId: string, topic: string, packetNumber: number) => {
+const requestNextPacket = (videoId: string, topic: string) => {
   if (client) {
     const nextPacketRequest = {
-      clientId,
-      topic,
-      packetNumber,
+      video_id: videoId,
+      packet_number: currentPacketNumber,
+      channel_uuid: topic, 
     };
 
     client.publish(BROKER_SERVICE_TOPIC, JSON.stringify(nextPacketRequest));
-    console.log('Requête pour le paquet suivant', packetNumber);
+    console.log('Requête pour le paquet suivant', currentPacketNumber);
   }
 };
 

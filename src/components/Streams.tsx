@@ -30,13 +30,13 @@ interface StreamItem {
 
 interface StreamItemsProps {
   items: StreamItem[];
-  toStream: (id: number) => void;
+  toStream: (id: string) => void;
 }
 
 
 export function Streams({ items, toStream }: StreamItemsProps) {
 
-  const handleClicked = (id: number) => {
+  const handleClicked = (id: string) => {
     toStream(id);
   }
 
@@ -51,7 +51,7 @@ export function Streams({ items, toStream }: StreamItemsProps) {
         <motion.div
           key={item.ID}
           className="relative z-10 bg-white flex aspect-video flex-col cursor-pointer border-2 rounded-md border-slate-50 shadow-sm"
-          onClick={() => handleClicked(item.ID)}
+          onClick={() => handleClicked(item.VideoID)}
           variants={itemMotion}
         >
           <div className="overflow-hidden rounded-t-md relative">

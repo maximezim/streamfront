@@ -6,7 +6,7 @@ interface brokerContextProps {
   streamList: DataObject[];
   packetList: VideoPacket[];
   chatMessages: ChatMessage[];
-  requestVideoPacket: (videoId: number) => void;
+  requestVideoPacket: (videoId: string) => void;
 }
 
 const BrokerContext = createContext<brokerContextProps>({
@@ -22,7 +22,13 @@ export const BrokerProvider = ({ children }: { children: ReactNode }) => {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
-    initializeMqttClient(setStreamList, setPacketList, setChatMessages);
+    initializeMqttClient(
+      setStreamList, 
+      (newPackets) => {
+        setPacketList((prevPacketList: any) => [...prevPacketList, ...newPackets]);
+      },
+      setChatMessages
+    );
     fetchStreamsFromAPI().catch((error) => console.error('Erreur lors de la récupération des streams', error));
     return () => {
       disconnectMqttClient();

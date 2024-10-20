@@ -1,103 +1,89 @@
-import React, { useState, useEffect } from 'react';
-import videoUrl from '@/assets/test.mp4'; // Importer la vidéo
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import brokerContext from '@/broker_context';
+import { VideoPacket } from '@/broker';
 
 const VideoPlayer: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentBlobUrl, setCurrentBlobUrl] = useState<string | null>(null);
-
-  const fetchAndDisplayVideo = async (videoFileUrl: string) => {
-    try {
-      const response = await fetch(videoFileUrl); // Charger la vidéo depuis l'URL
-      if (!response.ok) {
-        throw new Error(`Failed to fetch video: ${response.statusText}`);
-      }
-
-      const videoArrayBuffer = await response.arrayBuffer(); // Convertir la réponse en ArrayBuffer
-      const totalBytes = videoArrayBuffer.byteLength;
-
-      // Diviser le ArrayBuffer en plusieurs parties
-      const numberOfParts = 10; // Nombre de parties à diviser
-      const partSize = Math.ceil(totalBytes / numberOfParts); // Taille de chaque partie
-      const parts: Uint8Array[] = []; // Pour stocker les parties au fur et à mesure
-
-      let combinedArray = new Uint8Array(0); // Tableau pour combiner les morceaux progressifs
-
-      const loadPart = (partIndex: number) => {
-        if (partIndex >= numberOfParts) {
-          console.log('All parts loaded.');
-          return;
-        }
-
-        const start = partIndex * partSize;
-        const end = Math.min(start + partSize, totalBytes);
-        const partData = new Uint8Array(videoArrayBuffer.slice(start, end));
-
-        // Concaténer le nouveau morceau à l'array existant
-        const updatedArray = new Uint8Array(combinedArray.length + partData.length);
-        updatedArray.set(combinedArray, 0);
-        updatedArray.set(partData, combinedArray.length);
-
-        combinedArray = updatedArray; // Mettre à jour le tableau complet
-
-        // Créer un Blob à partir des données combinées
-        const newBlob = new Blob([combinedArray], { type: 'video/mp4' });
-        const newBlobUrl = URL.createObjectURL(newBlob);
-
-        // Mettre à jour la vidéo avec le nouveau Blob en manipulant directement le DOM
-        updateVideoSource(newBlobUrl, partIndex);
-
-        // Charger la partie suivante après un court délai
-        setTimeout(() => loadPart(partIndex + 1), 500); // Ajoute un délai pour simuler le chargement progressif
-      };
-
-      loadPart(0); // Commencer avec la première partie
-    } catch (error) {
-      console.error('Error loading video:', error);
-    } finally {
-      setIsLoading(false); // Fin du chargement
-    }
-  };
-
-  const updateVideoSource = (newBlobUrl: string, partIndex: number) => {
-    const videoElement = document.getElementById('videoPlayer') as HTMLVideoElement; // Manipulation directe du DOM
-
-    if (videoElement) {
-      if (currentBlobUrl) {
-        // Révoquer l'ancien URL Blob pour libérer la mémoire
-        URL.revokeObjectURL(currentBlobUrl);
-      }
-
-      // Mettre à jour le nouvel URL Blob
-      setCurrentBlobUrl(newBlobUrl);
-
-      // Assigner le nouveau Blob à la vidéo
-      videoElement.src = newBlobUrl;
-      videoElement.load(); // Recharger la vidéo pour prendre en compte le nouveau contenu
-
-      console.log(`Part ${partIndex + 1} loaded and video updated with new Blob URL.`);
-    }
-  };
+  const { packetList } = useContext(brokerContext);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const mediaSourceRef = useRef<MediaSource | null>(null);
+  const sourceBufferRef = useRef<SourceBuffer | null>(null);
+  const [bufferQueue, setBufferQueue] = useState<Uint8Array[]>([]);
 
   useEffect(() => {
-    // Lancer le chargement de la vidéo progressive
-    fetchAndDisplayVideo(videoUrl);
+    // Crée un MediaSource
+    const mediaSource = new MediaSource();
+    mediaSourceRef.current = mediaSource;
+
+    const videoElement = videoRef.current;
+    if (videoElement) {
+      videoElement.src = URL.createObjectURL(mediaSource);
+    }
+
+    mediaSource.addEventListener('sourceopen', () => {
+      // Crée un SourceBuffer pour le format vidéo
+      if (mediaSource.readyState === 'open') {
+        sourceBufferRef.current = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.42E01E, mp4a.40.2"');
+        processBufferQueue(); // Démarre le traitement de la file d'attente
+      }
+    });
+
+    // Nettoyage lorsque le composant est démonté
+    return () => {
+      if (videoElement) {
+        URL.revokeObjectURL(videoElement.src);
+      }
+      mediaSourceRef.current = null;
+      sourceBufferRef.current = null;
+    };
   }, []);
+
+  useEffect(() => {
+    // Ajoute les nouvelles données à la file d'attente
+    if (packetList.length > 0) {
+      const newPackets: Uint8Array[] = packetList.map((packet: VideoPacket) => packet.data);
+      setBufferQueue((prevQueue: any) => [...prevQueue, ...newPackets]);
+    }
+  }, [packetList]);
+
+  const processBufferQueue = () => {
+    if (sourceBufferRef.current && bufferQueue.length > 0) {
+      const data: Uint8Array = bufferQueue[0]; // Récupère le premier élément de la file d'attente
+      if (sourceBufferRef.current.updating) {
+        // Si le SourceBuffer est occupé, ne rien faire pour le moment
+        return;
+      }
+      // Ajoute le buffer au SourceBuffer
+      sourceBufferRef.current.appendBuffer(data);
+      // Supprime le premier élément de la file d'attente
+      setBufferQueue((prevQueue: string | any[]) => prevQueue.slice(1));
+    }
+  };
+
+  // Écoutez l'événement updateend pour savoir quand le SourceBuffer est prêt pour de nouvelles données
+  useEffect(() => {
+    if (sourceBufferRef.current) {
+      const handleUpdateEnd = () => {
+        processBufferQueue(); // Traite la prochaine donnée de la file d'attente
+      };
+
+      sourceBufferRef.current.addEventListener('updateend', handleUpdateEnd);
+
+      // Nettoyez l'écouteur d'événements
+      return () => {
+        sourceBufferRef.current?.removeEventListener('updateend', handleUpdateEnd);
+      };
+    }
+  }, [bufferQueue]);
 
   return (
     <div>
-      <h3>Lecteur Vidéo Progressif avec Blob</h3>
-
-      {isLoading && <p>Chargement de la vidéo...</p>}
-
-      <video
-        id="videoPlayer" // Manipulation via id, comme dans ton exemple
-        controls
-        autoPlay
-        muted
-        style={{ width: '100%', height: 'auto' }}
-      >
-        Votre navigateur ne supporte pas la balise vidéo.
-      </video>
+      <h3>Lecteur Vidéo Progressif avec MediaSource</h3>
+      <video ref={videoRef} controls autoPlay />
+      {packetList.length > 0 ? (
+        <p>Nombre de paquets reçus : {packetList.length}</p>
+      ) : (
+        <p>En attente des paquets...</p>
+      )}
     </div>
   );
 };

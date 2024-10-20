@@ -59,6 +59,8 @@ const VideoPlayer: React.FC = () => {
 
   const appendBuffer = () => {
     if (!sourceBufferRef.current || sourceBufferRef.current.updating || bufferQueue.length === 0) {
+      console.log(sourceBufferRef.current?.updating);
+      console.log(bufferQueue.length);
       console.log('Le SourceBuffer est en cours de mise à jour ou la file d\'attente est vide.');
       return;
     }

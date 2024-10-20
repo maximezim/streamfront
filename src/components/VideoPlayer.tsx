@@ -20,9 +20,9 @@ const VideoPlayer: React.FC = () => {
     }
 
     mediaSource.addEventListener('sourceopen', () => {
-      // Crée un SourceBuffer pour le format vidéo
+      // Crée un SourceBuffer pour le format AVI (ou le format approprié)
       if (mediaSource.readyState === 'open') {
-        sourceBufferRef.current = mediaSource.addSourceBuffer('video/mp4; codecs="avc1.42E01E, mp4a.40.2"');
+        sourceBufferRef.current = mediaSource.addSourceBuffer('video/x-msvideo'); // Pour AVI
         processBufferQueue(); // Démarre le traitement de la file d'attente
       }
     });
@@ -41,13 +41,13 @@ const VideoPlayer: React.FC = () => {
     // Ajoute les nouvelles données à la file d'attente
     if (packetList.length > 0) {
       const newPackets: Uint8Array[] = packetList.map((packet: VideoPacket) => packet.data);
-      setBufferQueue((prevQueue: any) => [...prevQueue, ...newPackets]);
+      setBufferQueue((prevQueue) => [...prevQueue, ...newPackets]);
     }
   }, [packetList]);
 
   const processBufferQueue = () => {
     if (sourceBufferRef.current && bufferQueue.length > 0) {
-      const data: Uint8Array = bufferQueue[0]; // Récupère le premier élément de la file d'attente
+      const data = bufferQueue[0]; // Récupère le premier élément de la file d'attente
       if (sourceBufferRef.current.updating) {
         // Si le SourceBuffer est occupé, ne rien faire pour le moment
         return;
@@ -55,7 +55,7 @@ const VideoPlayer: React.FC = () => {
       // Ajoute le buffer au SourceBuffer
       sourceBufferRef.current.appendBuffer(data);
       // Supprime le premier élément de la file d'attente
-      setBufferQueue((prevQueue: string | any[]) => prevQueue.slice(1));
+      setBufferQueue((prevQueue) => prevQueue.slice(1));
     }
   };
 
@@ -77,7 +77,7 @@ const VideoPlayer: React.FC = () => {
 
   return (
     <div>
-      <h3>Lecteur Vidéo Progressif avec MediaSource</h3>
+      <h3>Lecteur Vidéo avec MediaSource</h3>
       <video ref={videoRef} controls autoPlay />
       {packetList.length > 0 ? (
         <p>Nombre de paquets reçus : {packetList.length}</p>

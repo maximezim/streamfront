@@ -1,89 +1,77 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import brokerContext from '@/broker_context';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { toBlobURL } from '@ffmpeg/util';
 import { VideoPacket } from '@/broker';
 
 const VideoPlayer: React.FC = () => {
   const { packetList } = useContext(brokerContext);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const mediaSourceRef = useRef<MediaSource | null>(null);
-  const sourceBufferRef = useRef<SourceBuffer | null>(null);
-  const [bufferQueue, setBufferQueue] = useState<Uint8Array[]>([]);
+  const messageRef = useRef<HTMLParagraphElement | null>(null);
+  const ffmpegRef = useRef(new FFmpeg());
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    // Crée un MediaSource
-    const mediaSource = new MediaSource();
-    mediaSourceRef.current = mediaSource;
-
-    const videoElement = videoRef.current;
-    if (videoElement) {
-      videoElement.src = URL.createObjectURL(mediaSource);
-    }
-
-    mediaSource.addEventListener('sourceopen', () => {
-      // Crée un SourceBuffer pour le format AVI (ou le format approprié)
-      if (mediaSource.readyState === 'open') {
-        sourceBufferRef.current = mediaSource.addSourceBuffer('video/x-msvideo'); // Pour AVI
-        processBufferQueue(); // Démarre le traitement de la file d'attente
-      }
-    });
-
-    // Nettoyage lorsque le composant est démonté
-    return () => {
-      if (videoElement) {
-        URL.revokeObjectURL(videoElement.src);
-      }
-      mediaSourceRef.current = null;
-      sourceBufferRef.current = null;
+    const loadFFmpeg = async () => {
+      const baseURL = "https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm";
+      const ffmpeg = ffmpegRef.current;
+      await ffmpeg.load({
+        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
+        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
+        workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, "text/javascript"),
+      });
+      setLoaded(true);
     };
+
+    loadFFmpeg();
   }, []);
 
-  useEffect(() => {
-    // Ajoute les nouvelles données à la file d'attente
-    if (packetList.length > 0) {
-      const newPackets: Uint8Array[] = packetList.map((packet: VideoPacket) => packet.data);
-      setBufferQueue((prevQueue) => [...prevQueue, ...newPackets]);
-    }
-  }, [packetList]);
-
-  const processBufferQueue = () => {
-    if (sourceBufferRef.current && bufferQueue.length > 0) {
-      const data = bufferQueue[0]; // Récupère le premier élément de la file d'attente
-      if (sourceBufferRef.current.updating) {
-        // Si le SourceBuffer est occupé, ne rien faire pour le moment
-        return;
+  const transcode = async () => {
+    if (packetList.length === 0) {
+      if (messageRef.current) {
+        messageRef.current.innerHTML = "Aucun paquet disponible pour la conversion.";
       }
-      // Ajoute le buffer au SourceBuffer
-      sourceBufferRef.current.appendBuffer(data);
-      // Supprime le premier élément de la file d'attente
-      setBufferQueue((prevQueue) => prevQueue.slice(1));
+      return;
+    }
+
+    // Fusionner les paquets de bytes en un seul Uint8Array
+    const allBytes = new Uint8Array(packetList.reduce((sum, packet) => sum + packet.data.length, 0));
+    let offset = 0;
+    packetList.forEach(packet => {
+      allBytes.set(packet.data, offset);
+      offset += packet.data.length;
+    });
+
+    // Écrire le fichier AVI dans le système de fichiers de FFmpeg
+    const ffmpeg = ffmpegRef.current;
+    await ffmpeg.writeFile("input.avi", allBytes);
+    await ffmpeg.exec(["-i", "input.avi", "output.mp4"]); // Conversion en MP4
+
+    // Lire le fichier MP4 et l'afficher
+    const fileData = await ffmpeg.readFile('output.mp4');
+    const data = new Uint8Array(fileData as ArrayBuffer);
+    if (videoRef.current) {
+      videoRef.current.src = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+    }
+
+    if (messageRef.current) {
+      messageRef.current.innerHTML = "Conversion terminée avec succès.";
     }
   };
 
-  // Écoutez l'événement updateend pour savoir quand le SourceBuffer est prêt pour de nouvelles données
-  useEffect(() => {
-    if (sourceBufferRef.current) {
-      const handleUpdateEnd = () => {
-        processBufferQueue(); // Traite la prochaine donnée de la file d'attente
-      };
-
-      sourceBufferRef.current.addEventListener('updateend', handleUpdateEnd);
-
-      // Nettoyez l'écouteur d'événements
-      return () => {
-        sourceBufferRef.current?.removeEventListener('updateend', handleUpdateEnd);
-      };
-    }
-  }, [bufferQueue]);
-
   return (
     <div>
-      <h3>Lecteur Vidéo avec MediaSource</h3>
+      <h3>Lecteur Vidéo avec Conversion AVI à MP4</h3>
       <video ref={videoRef} controls autoPlay />
       {packetList.length > 0 ? (
-        <p>Nombre de paquets reçus : {packetList.length}</p>
+        <>
+          <p>Nombre de paquets reçus : {packetList.length}</p>
+          <button onClick={transcode}>Convertir AVI en MP4</button>
+        </>
       ) : (
         <p>En attente des paquets...</p>
       )}
+      <p ref={messageRef}></p>
     </div>
   );
 };

@@ -26,7 +26,9 @@ const VideoPlayer: React.FC = () => {
       offset += packet.length;
     });
 
-    const blob = new Blob([combinedBytes], { type: 'video/x-msvideo' }); // Ajustez le type si nécessaire
+    //creer un type mp4
+    //const blob = new Blob([combinedBytes], { type: 'video/mp4' }); // Ajustez le type si nécessaire
+    const blob = new Blob([combinedBytes], { type: 'video/mp4' }); // Ajustez le type si nécessaire
     videoRef.current.src = URL.createObjectURL(blob);
     videoRef.current.load();
     videoRef.current.play();

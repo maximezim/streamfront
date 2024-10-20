@@ -39,11 +39,11 @@ let packetList: VideoPacket[] = [];
 let chatMessages: any[] = [];
 let currentPacketNumber = 0;
 
-const BROKER_URL = "remicaulier.fr";
+const BROKER_HOSTNAME = window.location.hostname;
 const BROKER_PORT = 1886;
 const BROKER_USERNAME = "viewer";
 const BROKER_PASSWORD = "zimzimlegoat";
-const MQTT_URL = `mqtt://${BROKER_URL}:${BROKER_PORT}`;
+const MQTT_URL = `mqtt://${BROKER_HOSTNAME}:${BROKER_PORT}`;
 const BROKER_SERVICE_TOPIC = 'packet-request'; 
 
 let onStreamListUpdate: (data: DataObject[]) => void = () => {};

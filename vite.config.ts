@@ -13,7 +13,7 @@ export default defineConfig({
     host: "0.0.0.0",
     proxy: {
       '/videos': {
-        target: 'http://streaming-api.remicaulier.fr',
+        target: 'http://api:8080',
         changeOrigin: true,
         secure: true,
       }

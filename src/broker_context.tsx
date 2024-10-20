@@ -6,6 +6,7 @@ interface brokerContextProps {
   streamList: DataObject[];
   packetList: VideoPacket[];
   chatMessages: ChatMessage[];
+  messageList: any[];
   requestVideoPacket: (videoId: string) => void;
 }
 
@@ -13,6 +14,7 @@ const BrokerContext = createContext<brokerContextProps>({
   streamList: [],
   packetList: [],
   chatMessages: [],
+  messageList: [],
   requestVideoPacket: () => {},
 });
 
@@ -20,6 +22,7 @@ export const BrokerProvider = ({ children }: { children: ReactNode }) => {
   const [streamList, setStreamList] = useState<DataObject[]>([]);
   const [packetList, setPacketList] = useState<VideoPacket[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [messageList, setMessageList] = useState<any[]>([]);
 
   useEffect(() => {
     initializeMqttClient(
@@ -36,7 +39,7 @@ export const BrokerProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <BrokerContext.Provider value={{ streamList, packetList, chatMessages, requestVideoPacket }}>
+    <BrokerContext.Provider value={{ streamList, packetList, chatMessages, requestVideoPacket, messageList }}>
       {children}
     </BrokerContext.Provider>
   );

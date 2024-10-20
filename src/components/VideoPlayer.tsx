@@ -3,49 +3,76 @@ import brokerContext from '@/broker_context';
 import { VideoPacket } from '@/broker';
 
 const VideoPlayer: React.FC = () => {
-  const { packetList } = useContext(brokerContext);
+  // Destructure packetList and messageList from brokerContext with default empty arrays
+  const { packetList = [], messageList = [] } = useContext(brokerContext) || {};
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const mediaSourceRef = useRef<MediaSource | null>(null);
   const sourceBufferRef = useRef<SourceBuffer | null>(null);
+  
+  // Initialize bufferQueue as a ref to avoid unnecessary re-renders
   const bufferQueueRef = useRef<Uint8Array[]>([]);
+  
+  // Flags to manage appending state
   const isAppendingRef = useRef(false);
   const isMediaSourceOpenRef = useRef(false);
 
   // Initialize MediaSource on component mount
   useEffect(() => {
-    if (!videoRef.current) return;
+    if (!videoRef.current) {
+      console.error('Video element not found.');
+      return;
+    }
 
     if (!mediaSourceRef.current) {
       mediaSourceRef.current = new MediaSource();
+      if (!mediaSourceRef.current) {
+        console.error('Failed to create MediaSource.');
+        return;
+      }
       videoRef.current.src = URL.createObjectURL(mediaSourceRef.current);
+      
+      // Add event listeners for MediaSource
       mediaSourceRef.current.addEventListener('sourceopen', onSourceOpen);
       mediaSourceRef.current.addEventListener('error', onMediaSourceError);
+      
+      console.log('MediaSource initialized and event listeners added.');
     }
 
+    // Cleanup on component unmount
     return () => {
       if (mediaSourceRef.current) {
         mediaSourceRef.current.removeEventListener('sourceopen', onSourceOpen);
         mediaSourceRef.current.removeEventListener('error', onMediaSourceError);
         mediaSourceRef.current = null;
+        console.log('MediaSource event listeners removed.');
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Handle MediaSource 'sourceopen' event
+  // Function to handle MediaSource 'sourceopen' event
   const onSourceOpen = () => {
-    if (!mediaSourceRef.current || !videoRef.current) return;
+    if (!mediaSourceRef.current || !videoRef.current) {
+      console.error('MediaSource or video element not available.');
+      return;
+    }
 
     const mimeCodec = 'video/mp4; codecs="avc1.64001e, mp4a.40.2"';
     if (MediaSource.isTypeSupported(mimeCodec)) {
       try {
         sourceBufferRef.current = mediaSourceRef.current.addSourceBuffer(mimeCodec);
         sourceBufferRef.current.mode = 'segments';
+        
+        // Add event listeners for SourceBuffer
         sourceBufferRef.current.addEventListener('updateend', onUpdateEnd);
         sourceBufferRef.current.addEventListener('error', onSourceBufferError);
+        
         console.log('SourceBuffer created with codec:', mimeCodec);
         isMediaSourceOpenRef.current = true;
-        appendToBuffer(); // Start appending if bufferQueue has data
+        
+        // Start appending if bufferQueue has data
+        appendToBuffer();
       } catch (e) {
         console.error('Failed to add SourceBuffer:', e);
       }
@@ -54,17 +81,17 @@ const VideoPlayer: React.FC = () => {
     }
   };
 
-  // Handle MediaSource errors
+  // Function to handle MediaSource errors
   const onMediaSourceError = (e: any) => {
     console.error('MediaSource error:', e);
   };
 
-  // Handle SourceBuffer errors
+  // Function to handle SourceBuffer errors
   const onSourceBufferError = (e: any) => {
     console.error('SourceBuffer error:', e);
   };
 
-  // Handle SourceBuffer 'updateend' event
+  // Function to handle SourceBuffer 'updateend' event
   const onUpdateEnd = () => {
     isAppendingRef.current = false;
     appendToBuffer();
@@ -75,14 +102,44 @@ const VideoPlayer: React.FC = () => {
     if (packetList.length > 0) {
       const newPackets: Uint8Array[] = packetList.map((packet: VideoPacket) => packet.data);
       bufferQueueRef.current.push(...newPackets);
-      console.log('Added new packets to bufferQueue:', newPackets.length);
+      console.log(`Added ${newPackets.length} new packet(s) to bufferQueue.`);
+
+      // Clear the packetList to prevent re-processing
+      // This depends on your context management; ensure this doesn't cause unintended side effects
+      // If your context handles this, you can skip this step
+      // Otherwise, consider using a state variable or another method to manage packet consumption
+
       appendToBuffer();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [packetList]);
 
+  // Listen for end-of-stream (EOS) messages to finalize the stream
+  useEffect(() => {
+    if (messageList.length > 0) {
+      messageList.forEach((msg) => {
+        if (msg.topic === 'go-streaming' && msg.payload.toString() === 'EOSTREAMING') {
+          console.log('Received EOS message.');
+
+          if (mediaSourceRef.current && mediaSourceRef.current.readyState === 'open') {
+            try {
+              mediaSourceRef.current.endOfStream();
+              console.log('Called endOfStream on MediaSource.');
+            } catch (e) {
+              console.error('Error calling endOfStream:', e);
+            }
+          }
+        }
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messageList]);
+
   // Function to append data to the SourceBuffer
   const appendToBuffer = () => {
+    // Log the current bufferQueueRef state for debugging
+    console.log('Attempting to append to bufferQueue:', bufferQueueRef.current);
+
     if (
       !isMediaSourceOpenRef.current ||
       isAppendingRef.current ||
@@ -90,17 +147,21 @@ const VideoPlayer: React.FC = () => {
       sourceBufferRef.current.updating ||
       bufferQueueRef.current.length === 0
     ) {
+      console.log('Conditions not met for appending. Skipping.');
       return;
     }
 
     const chunk = bufferQueueRef.current.shift();
-    if (!chunk) return;
+    if (!chunk) {
+      console.warn('No chunk available to append.');
+      return;
+    }
 
     isAppendingRef.current = true;
 
     try {
       sourceBufferRef.current.appendBuffer(chunk);
-      console.log('Appended chunk of size:', chunk.byteLength);
+      console.log(`Appended chunk of size: ${chunk.byteLength} bytes.`);
     } catch (e) {
       console.error('Error appending buffer:', e);
       isAppendingRef.current = false;

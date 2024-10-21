@@ -64,13 +64,7 @@ const VideoPlayer: React.FC = () => {
 
   return (
     <div>
-      <h3>Video Player</h3>
-      <video ref={videoRef} controls autoPlay style={{ width: '100%', height: 'auto' }} />
-      {packetList.length > 0 ? (
-        <p>Packets received: {packetList.length}</p>
-      ) : (
-        <p>Waiting for packets...</p>
-      )}
+      <video className='relative z-10' ref={videoRef} controls autoPlay style={{ width: '100%', height: 'auto' }} />
     </div>
   );
 };

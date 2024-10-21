@@ -23,7 +23,7 @@ const VideoPlayer: React.FC = () => {
       messageList.forEach((msg) => {
         if (msg.topic === 'go-streaming' && msg.payload.toString() === 'EOSTREAMING') {
           console.log('Received EOS message.');
-          finalizeVideoBlob();
+          //finalizeVideoBlob();
         }
       });
     }

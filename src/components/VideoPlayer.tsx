@@ -23,7 +23,7 @@ const VideoPlayer: React.FC = () => {
       messageList.forEach((msg) => {
         if (msg.topic === 'go-streaming' && msg.payload.toString() === 'EOSTREAMING') {
           console.log('Received EOS message.');
-          //finalizeVideoBlob();
+          finalizeVideoBlob();
         }
       });
     }
@@ -45,12 +45,12 @@ const VideoPlayer: React.FC = () => {
   };
 
   const finalizeVideoBlob = () => {
+    // Optionally, you can finalize the Blob or take any action needed when the stream ends
     console.log('Finalizing video Blob.');
-    
-    // Call appendToBlob to ensure the last chunk is added
-    appendToBlob();
+    // You can keep it as is or process it further as needed
   };
 
+  // Update the video element's source whenever the videoBlob state changes
   useEffect(() => {
     if (videoRef.current && videoBlob) {
       const videoUrl = URL.createObjectURL(videoBlob);

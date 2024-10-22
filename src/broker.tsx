@@ -15,13 +15,7 @@ export interface VideoPacket {
   video_id: string;
   packet_number: number;
   total_packets: number;
-  data: Uint8Array; 
-}
-
-export interface VideoPacketSIS {
-  MsgPackPacket: Uint8Array;
-  A: Uint8Array;
-  V: Uint8Array;
+  data: Uint8Array; // Champ contenant les données en Uint8Array
 }
 
 export interface ChatMessage {
@@ -35,7 +29,7 @@ let client: mqtt.MqttClient | null = null;
 let clientID: string;
 
 let streamList: DataObject[] = [];
-let packetList: VideoPacket[] = [];
+let packetList: Uint8Array[] = []; // On garde seulement le champ "data" des VideoPacket
 let chatMessages: any[] = [];
 let currentPacketNumber = 1;
 
@@ -47,16 +41,21 @@ const MQTT_URL = `mqtt://${BROKER_HOSTNAME}:${BROKER_PORT}`;
 const BROKER_SERVICE_TOPIC = 'packet-request'; 
 
 let onStreamListUpdate: (data: DataObject[]) => void = () => {};
-let onPacketListUpdate: (packets: VideoPacket[]) => void = () => {};
+let onPacketListUpdate: (packets: Uint8Array[]) => void = () => {}; // On travaille avec Uint8Array[]
 let chatMessagesCallback: ((messages: any[]) => void) | null = null;
+
+function wait(ms: number): Promise<void> {
+  console.log('Waiting...');
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export const initializeMqttClient = (
   onDataUpdate: (data: DataObject[]) => void, 
-  onPacketUpdate: (packets: VideoPacket[]) => void,
+  onPacketUpdate: (packets: Uint8Array[]) => void, // Modification ici pour Uint8Array
   onChatMessage: (messages: any[]) => void
 ) => {
   onStreamListUpdate = onDataUpdate;
-  onPacketListUpdate = (newPackets: VideoPacket[]) => {
+  onPacketListUpdate = (newPackets: Uint8Array[]) => { // On gère des Uint8Array
     onPacketUpdate(newPackets);
   };
   chatMessagesCallback = onChatMessage;
@@ -84,8 +83,6 @@ export const initializeMqttClient = (
   });
 };
 
-
-
 export const fetchStreamsFromAPI = async () => {
   try {
     const response = await axios.get<DataObject[]>('/videos', {});
@@ -97,9 +94,6 @@ export const fetchStreamsFromAPI = async () => {
   }
 };
 
-
-
-
 export const requestVideoPacket = (videoId: string) => {
   if (client) {
     let channel_uuid = `stream-${clientID}`;
@@ -109,7 +103,7 @@ export const requestVideoPacket = (videoId: string) => {
       channel_uuid: channel_uuid, 
     };
 
-    subscribeToChannel(videoId,packetRequest.channel_uuid);
+    subscribeToChannel(videoId, packetRequest.channel_uuid);
     client.publish(BROKER_SERVICE_TOPIC, JSON.stringify(packetRequest));
     console.log('Requête pour le paquet', currentPacketNumber);
   }
@@ -127,11 +121,9 @@ const subscribeToChannel = (videoID: string, videoTopic: string) => {
           if (receivedTopic === videoTopic) {
             try {
               const decodedMessage = msgpack.decode(new Uint8Array(message)) as VideoPacket;
-              const updatedPacketList = [...packetList, decodedMessage];
-              console.log('Paquet reçu', decodedMessage);
-              console.log('Paquets reçus', updatedPacketList);
-              onPacketListUpdate(updatedPacketList);
+              const updatedPacketList = [...packetList, decodedMessage.data];
 
+              onPacketListUpdate(updatedPacketList); 
               currentPacketNumber++;
               requestNextPacket(videoID, videoTopic);
             } catch (error) {
@@ -142,14 +134,14 @@ const subscribeToChannel = (videoID: string, videoTopic: string) => {
       }
     });
 
-    client.subscribe(`chat-${clientID}`, (err) => {
+    client.subscribe(`chat-${videoID}`, (err) => {
       if (err) {
         console.error('Erreur lors de la souscription au topic chat', err);
       } else {
-        console.log(`Souscrit au topic de chat chat-${clientID}`);
+        console.log(`Souscrit au topic de chat chat-${videoID}`);
 
         client?.on('message', (receivedTopic, message) => {
-          if (receivedTopic === `chat-${clientID}`) {
+          if (receivedTopic === `chat-${videoID}`) {
             try {
               const chatMessage = JSON.parse(message.toString());
               chatMessages.push(chatMessage);
@@ -174,7 +166,6 @@ const requestNextPacket = (videoId: string, topic: string) => {
       packet_number: currentPacketNumber,
       channel_uuid: topic, 
     };
-
     client.publish(BROKER_SERVICE_TOPIC, JSON.stringify(nextPacketRequest));
     console.log('Requête pour le paquet suivant', currentPacketNumber);
   }
@@ -194,5 +185,5 @@ export const disconnectMqttClient = () => {
 };
 
 export const getStreamList = () => streamList;
-export const getPacketList = () => packetList;
+export const getPacketList = () => packetList; // Liste des Uint8Array (données des paquets)
 export const getClientID = () => clientID;

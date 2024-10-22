@@ -4,7 +4,7 @@ import { DataObject, VideoPacket, ChatMessage } from '@/broker';
 
 interface brokerContextProps {
   streamList: DataObject[];
-  packetList: VideoPacket[];
+  packetList: Uint8Array[];
   chatMessages: ChatMessage[];
   messageList: any[];
   requestVideoPacket: (videoId: string) => void;
@@ -20,7 +20,7 @@ const BrokerContext = createContext<brokerContextProps>({
 
 export const BrokerProvider = ({ children }: { children: ReactNode }) => {
   const [streamList, setStreamList] = useState<DataObject[]>([]);
-  const [packetList, setPacketList] = useState<VideoPacket[]>([]);
+  const [packetList, setPacketList] = useState<Uint8Array[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [messageList, setMessageList] = useState<any[]>([]);
 
